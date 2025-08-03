@@ -1,0 +1,11 @@
+{
+    "name" : "@vue/shared",
+    "version" : "1.0.0",
+    "modlue" : "dist/shared.esm-bundler.js",
+    "buildOtptions":{
+        "formats":[
+            "ems-bundler",
+            "cjs"
+        ]
+    }
+}
