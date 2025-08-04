@@ -8,7 +8,7 @@ const createDep = (cleanup) => {
     return dep;
 }
 
-export function track(target, key) {
+export function track(target, key)  { 
     if (activeEffect) {
         console.log(target, key, activeEffect)
         let depsMap = targetMap.get(target)
@@ -23,6 +23,7 @@ export function track(target, key) {
                 dep = createDep(() => depsMap.delete(key)) //用createDep代替直接new Map()，可以传入清理函数
             );
         }
+        //上边知识做好了映射结构,dep里面没有关联effect
         trackEffect(activeEffect,dep) // 将当前的effec放入到dep(映射表)中，后续可以根据值的变化触发此dep中存放的effect
     }
 }
