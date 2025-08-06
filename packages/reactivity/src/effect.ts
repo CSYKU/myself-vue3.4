@@ -12,10 +12,26 @@ export function effect(fn, options?) {
 }
 
 export let activeEffect; // 依赖收集的全局变量
+
 function preCleanEffect(effect) {
     effect._depsLength = 0;
     effect._trackId++; //每次执行id都是+1，如果当前同一个effect执行，id就是相同的
 }
+
+
+
+function postCleanEffect(effect){
+    // [flag ,age,name] 长度减少清理多余的
+    // [flag] --> effect._depsLength =1
+    if(effect.deps.length > effect._depsLength){
+        for(let i = effect._depsLength;i<effect.deps.length;i++){
+            cleanDepEffect(effect.deps[i],effect); //删除映射表中对应的effec
+        }
+        effect.deps._depsLength = effect._depsLength; //更新依赖列表中的长度
+    }
+}
+
+
 
 class ReactiveEffect {
     _trackId = 0;   //用于记录当前effect执行了几次，标识同一次执行中有多个相同的属性收集。
@@ -40,6 +56,8 @@ class ReactiveEffect {
 
             return this.fn(); //执行fn函数时，做依赖收集，收集effect相关联的数据 -> state.name state.age
         } finally {
+
+            postCleanEffect(this); //超出清理多余的
             activeEffect = lastactiveEffect; //effect中又有effect
         }
     }
