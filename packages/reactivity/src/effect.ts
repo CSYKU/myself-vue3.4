@@ -48,14 +48,33 @@ class ReactiveEffect {
     }
 }
 
-
+function cleanDepEffect(dep,effect){
+    dep.delete(effect)
+    if(dep.size == 0){
+        dep.cleanup()
+    }
+}
 
 // 双向记忆
 export function trackEffect(effect, dep) {
-    //  分支变动，需要重新收集依赖，将不需要的移除，重复收集也不执行
-    if (dep.get(effect) !== effect._trackId) {
+    //  分支变动，需要重新收集依赖，重复收集也不执行
+    if (dep.get(effect) !== effect._trackId) { //依据id判断是否重复收集
         dep.set(effect, effect.trackId)
+
+        let oldDep = effect.deps[effect._depsLength]
+        if(oldDep !== dep){
+            if(oldDep){
+                //删除老的
+                cleanDepEffect(oldDep,effect)
+            }
+            // 换成新的
+            effect.deps[effect._depsLength++]=dep;
+        }else{
+            effect._depsLength++;
+        }
     }
+
+
     //想让effect和dep关联起来，知道effect有哪些收集器
     effect.deps[effect._depsLength++] = dep;//双向记忆
 
