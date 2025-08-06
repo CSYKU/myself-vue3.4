@@ -1,4 +1,4 @@
-import { activeEffect } from "./effect";
+import { activeEffect ,trackEffect, triggerEffects} from "./effect";
 
 const targetMap = new WeakMap(); //存放依赖收集的关系
 
@@ -10,7 +10,7 @@ const createDep = (cleanup) => {
 
 export function track(target, key)  { 
     if (activeEffect) {
-        console.log(target, key, activeEffect)
+
         let depsMap = targetMap.get(target)
         if (!depsMap) {
             // 新增的
@@ -24,8 +24,23 @@ export function track(target, key)  {
             );
         }
         //上边知识做好了映射结构,dep里面没有关联effect
+        // @activeEffect 旗子实际是effect对象
+        // @dep  map结构的响应式对象属性的所有关联的副作用，多个effect集合
         trackEffect(activeEffect,dep) // 将当前的effec放入到dep(映射表)中，后续可以根据值的变化触发此dep中存放的effect
     }
+}
+
+export function trigger(target,key,newValue,olderValue){
+    const depsMap = targetMap.get(target)
+    if(!depsMap){ //找不到对象，不用更新直接return
+        return 
+    }
+    let dep = depsMap.get(key)
+    if(dep){
+        triggerEffects(dep);
+    }
+    
+    return 
 }
 
 

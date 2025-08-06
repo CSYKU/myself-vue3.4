@@ -1,4 +1,5 @@
-import {activeEffect} from "./effect"
+import {activeEffect , trackEffect} from "./effect"
+import { track, trigger } from "./reactiveEffect";
 
 export enum ReactiveFlags{
     IS_REACTIVE = "__v_isReactive"
@@ -12,11 +13,11 @@ export const mutableHanders:ProxyHandler<any>={
 
         // 依赖收集todo...
 
-        track(target,key) //收集这个对象上的属性，和effect关联在一起
-        console.log(activeEffect,key)
+        track(target,key) //收集这个对象上的属性，和effect关联在一起 
+        
         return Reflect.get(target,key,recevier) //recevier就是代理对象
-        // 不能直接return target[key]和target[key]，如果代理对象对象中有this会死循环 
-        // reflect 和 proxy 搭配使用
+        // 不能直接return target[key]或者this[key]，如果代理对象对象中有this会死循环 
+        // reflect 和 proxy 搭配使用 reflect内建全局对象，提供了一组操作对象的方法，反射
         // const person = {
         //     namea:  'name',
         //     get aliasname(){
@@ -26,11 +27,11 @@ export const mutableHanders:ProxyHandler<any>={
     },
     set(target,key,value,recevier){
         let olderValue = target[key];
-        
+        let result = Reflect.set(target,key,value,recevier);
         if(olderValue !== value){
-            trigger()
+            trigger(target, key, value, olderValue)//触发页面更新
         }
         // 触发更新 todo...
-        return Reflect.set(target,key,value,recevier); 
+        return result; 
     },
 }
