@@ -18,7 +18,7 @@ function preCleanEffect(effect) {
 }
 
 class ReactiveEffect {
-    _trackId = 0; //用于记录当前effect执行了几次
+    _trackId = 0;   //用于记录当前effect执行了几次，标识同一次执行中有多个相同的属性收集。
     deps = [];
     _depsLength = 0;
 
