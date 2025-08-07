@@ -30,6 +30,9 @@ esbuild.context({
     globalName: pkg.buildOptions?.name
 
 }).then((cxt)=>{
+
     console.log(cxt);
+    console.log(new Date())
+    console.log('Watching for changes...')
     return cxt.watch()
 })
