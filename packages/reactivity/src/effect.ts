@@ -9,6 +9,13 @@ export function effect(fn, options?) {
         _effect.run()
     })
     _effect.run() //effect立即执行一次
+
+    if(options){
+        Object.assign(_effect,options);// 用用户传递的覆盖掉内置的，实现切片编程
+    }   
+    const runner = _effect.run.bind(_effect);
+    runner.effect = _effect; // 可以在run方法上获取到effect的引用
+    return runner; //外界可以自己让其执行run
 }
 
 export let activeEffect; // 依赖收集的全局变量
