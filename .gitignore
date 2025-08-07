@@ -1,2 +1,3 @@
 node_modules
-packages\reactivity\dist
+packages/reactivity/dist/reactivity.js
+packages/reactivity/dist/reactivity.js.map
