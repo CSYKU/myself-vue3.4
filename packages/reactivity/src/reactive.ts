@@ -15,10 +15,10 @@ function createReactiveObject(target){
         return exitProxy;
     }
     //需要代理，就用proxy
-    new Proxy(target,mutableHanders);
+    let proxy = new Proxy(target,mutableHanders);
     //缓存代理过的对象，目的是为了区别重复代理
-    reactiveMap.set(target,Proxy)
-    return Proxy;
+    reactiveMap.set(target,proxy)
+    return proxy;
     
 } 
 
