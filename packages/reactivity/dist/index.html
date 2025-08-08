@@ -21,10 +21,12 @@
       name: 'wo',
       age: 15,
       flag: true,
+      address: {
+        n: 1
+      }
     });
     effect(() => {
-      app.innerHTML = state.name;
-      state.name = Math.random() //effect执行时更新
+      app.innerHTML = state.address.n //访问对象
     })
 
     //   let runner= effect(() => {
@@ -36,9 +38,9 @@
     //     }
     //   }
     // )
-    // setTimeout(() => {
-    //   state.flag = false;
-    // }, 1000);
+    setTimeout(() => {
+      state.address.n = 99;
+    }, 1000);
     // watch(() => state.name, (newValue, oldValue, onCleanup) => {
     //   // 监测一个响应式值的变化
     //   console.log(newValue, oldValue);
