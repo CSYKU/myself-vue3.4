@@ -27,7 +27,7 @@ function preCleanEffect(effect) {
 
 
 
-function postCleanEffect(effect){
+function postCleanEffect(effect){ //用在finally里
     // [flag ,age,name] 长度减少清理多余的
     // [flag] --> effect._depsLength =1
     if(effect.deps.length > effect._depsLength){
@@ -101,7 +101,7 @@ export function trackEffect(effect, dep) {
 
 
     //想让effect和dep关联起来，知道effect有哪些收集器
-    effect.deps[effect._depsLength++] = dep;//双向记忆
+    // effect.deps[effect._depsLength++] = dep;//双向记忆
 
     // dep.get(effect,effect._trackId);
     // effect.deps[effect._depsLength++] = dep;

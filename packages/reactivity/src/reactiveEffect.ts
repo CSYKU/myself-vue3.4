@@ -2,9 +2,10 @@ import { activeEffect ,trackEffect, triggerEffects} from "./effect";
 
 const targetMap = new WeakMap(); //存放依赖收集的关系
 
-const createDep = (cleanup) => {
+const createDep = (cleanup,key) => {
     const dep = new Map() as any;
     dep.cleanup = cleanup;
+    dep.mekey = key;
     return dep;
 }
 
@@ -20,7 +21,7 @@ export function track(target, key)  {
         if (!dep) {
             depsMap.set(
                 key,
-                dep = createDep(() => depsMap.delete(key)) //用createDep代替直接new Map()，可以传入清理函数
+                dep = createDep(() => depsMap.delete(key),key) //用createDep代替直接new Map()，可以传入清理函数
             );
         }
         //上边知识做好了映射结构,dep里面没有关联effect
