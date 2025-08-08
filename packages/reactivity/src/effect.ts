@@ -10,9 +10,9 @@ export function effect(fn, options?) {
     })
     _effect.run() //effect立即执行一次
 
-    if(options){
-        Object.assign(_effect,options);// 用用户传递的覆盖掉内置的，实现切片编程
-    }   
+    if (options) {
+        Object.assign(_effect, options);// 用用户传递的覆盖掉内置的，实现切片编程
+    }
     const runner = _effect.run.bind(_effect);
     runner.effect = _effect; // 可以在run方法上获取到effect的引用
     return runner; //外界可以自己让其执行run
@@ -27,12 +27,12 @@ function preCleanEffect(effect) {
 
 
 
-function postCleanEffect(effect){ //用在finally里
+function postCleanEffect(effect) { //用在finally里
     // [flag ,age,name] 长度减少清理多余的
     // [flag] --> effect._depsLength =1
-    if(effect.deps.length > effect._depsLength){
-        for(let i = effect._depsLength;i<effect.deps.length;i++){
-            cleanDepEffect(effect.deps[i],effect); //删除映射表中对应的effec
+    if (effect.deps.length > effect._depsLength) {
+        for (let i = effect._depsLength; i < effect.deps.length; i++) {
+            cleanDepEffect(effect.deps[i], effect); //删除映射表中对应的effec
         }
         effect.deps._depsLength = effect._depsLength; //更新依赖列表中的长度
     }
@@ -42,8 +42,9 @@ function postCleanEffect(effect){ //用在finally里
 
 class ReactiveEffect {
     _trackId = 0;   //用于记录当前effect执行了几次，标识同一次执行中有多个相同的属性收集。
-    deps = [];
+    _running = 0;   //effect是否在执行标识符
     _depsLength = 0;
+    deps = [];
 
 
     public active = true; // 默认标记创建的effect是响应式的,可以通过stop()修改停止effect，stop() todo...
@@ -57,13 +58,12 @@ class ReactiveEffect {
         let lastactiveEffect = activeEffect; // 规避递归调用effect导致this不对，也可以用栈调用解决
         try {
             activeEffect = this;
-
             //effect重新执行前，需要将上一次依赖预清空 effect.deps,为了在存在分支依赖时没有bug
             preCleanEffect(this);
-
+            this._running++;
             return this.fn(); //执行fn函数时，做依赖收集，收集effect相关联的数据 -> state.name state.age
         } finally {
-
+            this._running--
             postCleanEffect(this); //超出清理多余的
             activeEffect = lastactiveEffect; //effect中又有effect
         }
@@ -73,9 +73,9 @@ class ReactiveEffect {
     }
 }
 
-function cleanDepEffect(dep,effect){
+function cleanDepEffect(dep, effect) {
     dep.delete(effect)
-    if(dep.size == 0){
+    if (dep.size == 0) {
         dep.cleanup()
     }
 }
@@ -87,14 +87,14 @@ export function trackEffect(effect, dep) {
         dep.set(effect, effect.trackId)
 
         let oldDep = effect.deps[effect._depsLength]
-        if(oldDep !== dep){
-            if(oldDep){
+        if (oldDep !== dep) {
+            if (oldDep) {
                 //删除老的
-                cleanDepEffect(oldDep,effect)
+                cleanDepEffect(oldDep, effect)
             }
             // 换成新的
-            effect.deps[effect._depsLength++]=dep;
-        }else{
+            effect.deps[effect._depsLength++] = dep;
+        } else {
             effect._depsLength++;
         }
     }
@@ -110,7 +110,9 @@ export function trackEffect(effect, dep) {
 export function triggerEffects(dep) {
     for (const effect of dep.keys()) {
         if (effect.scheduler) {
-            effect.scheduler() // -> effect.run()
+            if (!effect._running) { //如果不是正在执行才可以执行更新
+                effect.scheduler()  // -> effect.run()
+            }
         }
     }
 }

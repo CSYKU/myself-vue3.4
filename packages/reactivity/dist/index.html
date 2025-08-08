@@ -20,20 +20,25 @@
     const state = reactive({
       name: 'wo',
       age: 15,
-      flag:true,
+      flag: true,
     });
-    let runner= effect(() => {
-      app.innerHTML = state.flag ? state.name : state.age;
-    },{
-      scheduler: () =>{
-        console.log('自己逻辑') //AOP编程
-        runner() // 重新渲染
-      }
-    }
-  )
-    setTimeout(() => {
-      state.flag = false;
-    }, 1000);
+    effect(() => {
+      app.innerHTML = state.name;
+      state.name = Math.random() //effect执行时更新
+    })
+
+    //   let runner= effect(() => {
+    //     app.innerHTML = state.flag ? state.name : state.age;
+    //   },{
+    //     scheduler: () =>{
+    //       console.log('自己逻辑') //AOP编程
+    //       runner() // 重新渲染
+    //     }
+    //   }
+    // )
+    // setTimeout(() => {
+    //   state.flag = false;
+    // }, 1000);
     // watch(() => state.name, (newValue, oldValue, onCleanup) => {
     //   // 监测一个响应式值的变化
     //   console.log(newValue, oldValue);
