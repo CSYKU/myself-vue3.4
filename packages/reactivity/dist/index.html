@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" >
+  <meta http-equiv="X-UA-Compatible">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>我的网页</title>
 </head>
@@ -12,26 +12,28 @@
   <div id="app"></div>
 
   <script type="module">
- 
+
     // import { reactive, toRef, proxyRefs, toRefs, effect, watch, ref, computed, watchEffect } from '../../../node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js'
     // import { reactive, proxyRefs, toRef, toRefs, effect, ref, computed, watch, watchEffect } from './reactivity.js'
-    import {reactive ,effect} from "./reactivity.js"
+    import { reactive, effect } from "./reactivity.js"
 
     const state = reactive({
-      name: 'zs',
-      age: 15
+      name: 'wo',
+      age: 15,
+      flag:true,
     });
-    let runner = effect(()=>{
-        console.log('测试')
-        console.log(state.name)
-        app.innerHTML = state.name
-      },{
-        scheduler:()=>{
-          console.log('ab')
-        }
+    let runner= effect(() => {
+      app.innerHTML = state.flag ? state.name : state.age;
+    },{
+      scheduler: () =>{
+        console.log('自己逻辑') //AOP编程
+        runner() // 重新渲染
       }
-    )
-
+    }
+  )
+    setTimeout(() => {
+      state.flag = false;
+    }, 1000);
     // watch(() => state.name, (newValue, oldValue, onCleanup) => {
     //   // 监测一个响应式值的变化
     //   console.log(newValue, oldValue);
