@@ -15,7 +15,7 @@
 
     // import { reactive, toRef, proxyRefs, toRefs, effect, watch, ref, computed, watchEffect } from '../../../node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js'
     // import { reactive, proxyRefs, toRef, toRefs, effect, ref, computed, watch, watchEffect } from './reactivity.js'
-    import { reactive, effect } from "./reactivity.js"
+    import { reactive, effect, ref } from "./reactivity.js"
 
     const state = reactive({
       name: 'wo',
@@ -25,41 +25,15 @@
         n: 1
       }
     });
-    effect(() => {
-      app.innerHTML = state.address.n //访问对象
+
+    const flag = ref(true) // 包装成对象 wrap(false) =>
+    effect(()=>{
+      app.innerHTMl = flag.value? '对': '错'
     })
-
-    //   let runner= effect(() => {
-    //     app.innerHTML = state.flag ? state.name : state.age;
-    //   },{
-    //     scheduler: () =>{
-    //       console.log('自己逻辑') //AOP编程
-    //       runner() // 重新渲染
-    //     }
-    //   }
-    // )
     setTimeout(() => {
-      state.address.n = 99;
+      flag.value = false
     }, 1000);
-    // watch(() => state.name, (newValue, oldValue, onCleanup) => {
-    //   // 监测一个响应式值的变化
-    //   console.log(newValue, oldValue);
 
-    //   onCleanup(() => {
-    //     console.log('onCleanup....')
-    //   })
-    // }, {
-    //   deep: true,
-    //   immediate: true
-    // });
-
-    // watchEffect(() => {
-    //   console.log('state.name=>', state.name)
-    // })
-
-    // setTimeout(() => {
-    //   state.name = 'ls'
-    // }, 2000)
   </script>
 </body>
 
