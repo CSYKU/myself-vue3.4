@@ -9,26 +9,18 @@
 </head>
 
 <body>
-  <div id="app"></div>
+  <div id="app"><div>a</div></div>
 
   <script type="module">
-
+    
     // import { reactive, toRef, proxyRefs, toRefs, effect, watch, ref, computed, watchEffect } from '../../../node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js'
     // import { reactive, proxyRefs, toRef, toRefs, effect, ref, computed, watch, watchEffect } from './reactivity.js'
-    import { reactive, effect, ref } from "./reactivity.js"
-
-    const state = reactive({
-      name: 'wo',
-      age: 15,
-      flag: true,
-      address: {
-        n: 1
-      }
-    });
+  
+    import { reactive, effect ,ref} from "./reactivity.js"
 
     const flag = ref(true) // 包装成对象 wrap(false) =>
     effect(()=>{
-      app.innerHTMl = flag.value? '对': '错'
+      app.innerHTML = flag.value ? '对': '错'
     })
     setTimeout(() => {
       flag.value = false

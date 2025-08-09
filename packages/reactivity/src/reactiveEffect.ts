@@ -2,7 +2,7 @@ import { activeEffect ,trackEffect, triggerEffects} from "./effect";
 
 const targetMap = new WeakMap(); //存放依赖收集的关系
 
-const createDep = (cleanup,key) => {
+export const createDep = (cleanup,key) => {
     const dep = new Map() as any;
     dep.cleanup = cleanup;
     dep.mekey = key; // 源码没有，为了方便调试找bug加的标识

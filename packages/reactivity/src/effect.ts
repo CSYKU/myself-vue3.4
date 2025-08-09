@@ -18,7 +18,7 @@ export function effect(fn, options?) {
     return runner; //外界可以自己让其执行run
 }
 
-export let activeEffect; // 依赖收集的全局变量
+export let activeEffect; // 正在执行的副作用函数effect，标识哪个副作用正在执行
 
 function preCleanEffect(effect) {
     effect._depsLength = 0;
