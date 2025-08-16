@@ -2,10 +2,7 @@ import { isObject } from "@vue/shared";
 import { activeEffect, trackEffect } from "./effect"
 import { reactive } from "./reactive";
 import { track, trigger } from "./reactiveEffect";
-
-export enum ReactiveFlags {
-    IS_REACTIVE = "__v_isReactive"
-}
+import { ReactiveFlags } from "./constans";
 
 // proxy 搭配feflect使用 反射：在代码执行时能修改代码的执行行为
 export const mutableHanders: ProxyHandler<any> = {
