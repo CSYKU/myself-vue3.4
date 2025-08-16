@@ -10,7 +10,7 @@ export function ref(value) {
 }
 
 function createRef(value) {
-   return new refImpl(value)
+    return new refImpl(value)
 }
 
 class refImpl {  //实现ref
@@ -46,4 +46,29 @@ function triggerRefValue(ref) {
     if (dep) {
         triggerEffects(dep) //触发更新
     }
+}
+
+// toRef toRefs
+
+class ObjectRefImp {
+    public _v_isRef = true;
+    constructor(public _object, public _key) { }
+    get value() {
+        return this._object[this._key];
+    }
+    set value(newValue) {
+        this._object[this._key] = newValue
+    }
+};
+
+export function toRef(object, key) {
+    return new ObjectRefImp(object, key)
+}
+
+export function toRefs() {
+    const res = {}
+    for (let key in Object) {
+        res[key] = toRef(Object, key)
+    }
+    return res;
 }
