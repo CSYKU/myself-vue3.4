@@ -1,3 +1,4 @@
+import { DirtyLevels } from "./constans";
 
 
 //创建一个响应式effect 数据变化可以重新执行
@@ -44,15 +45,23 @@ class ReactiveEffect {
     _trackId = 0;   //用于记录当前effect执行了几次，标识同一次执行中有多个相同的属性收集。
     _running = 0;   //effect是否在执行标识符
     _depsLength = 0;
+    _dirtyLevel = DirtyLevels.Dirty; // 计算属性脏值默认值为脏
     deps = [];
-
 
     public active = true; // 默认标记创建的effect是响应式的,可以通过stop()修改停止effect，stop() todo...
     // fn 用户传入函数
     // 如果fn中依赖的数据变化需要重新调用 run->
     constructor(public fn, public scheduler) { }
 
+    public get dirty() { //辅助函数，外界查看
+        return this._dirtyLevel === DirtyLevels.Dirty
+    }
+    public set dirty(v) {
+        this._dirtyLevel = v ? DirtyLevels.Dirty : DirtyLevels.NoDiryt;
+    }
+
     run() {
+        this._dirtyLevel = DirtyLevels.NoDiryt;// 运行后computed不脏
         //让fn执行
         if (!this.active) return this.fn();
         let lastactiveEffect = activeEffect; // 规避递归调用effect导致this不对，也可以用栈调用解决
