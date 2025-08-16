@@ -9,25 +9,33 @@
 </head>
 
 <body>
-  <div id="app"><div>a</div></div>
+  <div id="app"></div>
 
   // proxyRef简化模版使其不用.value
 
   <script type="module">
-    
+
     // import { reactive, toRef, proxyRefs, toRefs, effect, watch, ref, computed, watchEffect } from '../../../node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js'
     // import { reactive, proxyRefs, toRef, toRefs, effect, ref, computed, watch, watchEffect } from './reactivity.js'
-  
-    import { reactive, effect ,ref} from "./reactivity.js"
 
-    const flag = ref(true) // 包装成对象 wrap(false) =>
-    effect(()=>{
-      app.innerHTML = flag.value ? '对': '错'
+    import { reactive, effect, ref, toRef, toRefs, computed } from "./reactivity.js"
+
+    //  computed计算属性
+    //  computed执行后的结果是一个ref
+    const state = reactive({ name: "jw" })
+
+    // 有dirty = true 脏值属性缓存只执行一次
+    const aliasName = commputed(() => {
+      return 'aliasName' + state.name
     })
-    setTimeout(() => {
-      flag.value = false
-    }, 1000);
-
+    console.log(aliasName.value)
+    console.log(aliasName.value)
+    console.log(aliasName.value)
+    state.name = "newName" // 修改自动触发计算属性
+    // 原理描述
+    // 1.维护一个dirty属性，依据它来缓存执行
+    // 2.计算属性也是effect，依赖的属性也会收集这个effect，值变化触发computedEffect更新，修改dirty
+    // 3.计算属性具备收集能力，可以收集对应effect，依赖值(也就是计算属性别名)变化后触发收集的effect。
   </script>
 </body>
 
