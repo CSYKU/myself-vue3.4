@@ -33,7 +33,7 @@ class refImpl {  //实现ref
     }
 }
 
-function tarckRefValue(ref) {
+export function tarckRefValue(ref) {
     if (activeEffect) {
         trackEffect(activeEffect,
             ref.dep = createDep(() => ref.dep = undefined, 'undefined'))
@@ -41,7 +41,7 @@ function tarckRefValue(ref) {
 }
 
 
-function triggerRefValue(ref) {
+export function triggerRefValue(ref) {
     let dep = ref.dep
     if (dep) {
         triggerEffects(dep) //触发更新

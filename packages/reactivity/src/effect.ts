@@ -41,7 +41,7 @@ function postCleanEffect(effect) { //用在finally里
 
 
 
-class ReactiveEffect {
+export class ReactiveEffect {
     _trackId = 0;   //用于记录当前effect执行了几次，标识同一次执行中有多个相同的属性收集。
     _running = 0;   //effect是否在执行标识符
     _depsLength = 0;
@@ -118,6 +118,10 @@ export function trackEffect(effect, dep) {
 
 export function triggerEffects(dep) {
     for (const effect of dep.keys()) {
+        // 计算属性的脏值修改
+        if (effect._dirtyLevel < DirtyLevels.Dirty) {
+            effect._dirtyLevel = DirtyLevels.Dirty;
+        }
         if (effect.scheduler) {
             if (!effect._running) { //如果不是正在执行才可以执行更新
                 effect.scheduler()  // -> effect.run()
