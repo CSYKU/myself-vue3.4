@@ -60,7 +60,6 @@ class ObjectRefImp {
         this._object[this._key] = newValue
     }
 };
-
 export function toRef(object, key) {
     return new ObjectRefImp(object, key)
 }
@@ -91,4 +90,9 @@ export function proxyRef(objectWithRef) { //代理ref，effect中使用ref不用
             }
         }
     })
+}
+
+
+export function isRef(value) {
+    return value && value._v_isRef;
 }
