@@ -1,0 +1,47 @@
+import { isObject } from "@vue/shared"
+import { ReactiveEffect } from "vue";
+
+
+export function watch(source, cb, options = {} as any) {
+    // watchEffect 也可用doWatch
+    return doWatch(source, cb, options)
+}
+
+// seen 防止重复引用递归死循环
+function traverse(source, depth, currentDepth = 0, seen = new Set()) {
+    if (!isObject) {
+        return source
+    }
+    if (depth) {
+        if (currentDepth < depth) {
+            return source;
+            currentDepth++
+        }
+    }
+    if (seen.has(source)) {
+        return source
+    }
+    for (let key in source) {
+        traverse(source[key], depth, currentDepth, seen)
+    }
+    return source; //遍历触发需要监听的每个属性的getter
+}
+
+function doWatch(source, cb, { deep }) { //解构deep
+    // source ? -> getter
+
+    const reactiveGet = (source) => traverse(source, deep === false ? 1 : undefined) // 老版本没有depth
+
+    let getter = () => reactiveGet(source)
+    let oldVlaue;
+
+    const job = () => {
+        const newValue = effect.run();
+        cb(newValue, oldVlaue)
+        oldVlaue = newValue;
+
+    }
+    const effect = new ReactiveEffect(getter, job)
+    effect.run();
+
+}   

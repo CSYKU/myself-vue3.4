@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>我的网页</title>
+</head>
+
+<body>
+  <div id="app"></div>
+
+  // proxyRef简化模版使其不用.value
+
+  <script type="module">
+
+    // import { reactive, toRef, proxyRefs, toRefs, effect, watch, ref, computed, watchEffect } from '../../../node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js'
+    // import { reactive, proxyRefs, toRef, toRefs, effect, ref, computed, watch, watchEffect } from './reactivity.js'
+
+    import { reactive, effect, ref, toRef, toRefs, computed } from "./reactivity.js"
+    // watch 运行时也用到，api不在响应式模块中，但是基于响应式实现，
+    const state = reactive({ name: 'cs', address: { n: { n: 'sdj' } } })
+    watch(
+      state, // 维护成取值器来监听，类似new ReactiveEffect(getter)中的getter
+      function (oldValue, newValue, options = undefined) { //存在第三个参数没有实现
+        console.log(oldValue, newValue)
+      }, {
+      deep: false,
+    }
+    )
+  </script>
+</body>
+
+</html>

@@ -16,7 +16,7 @@ export function effect(fn, options?) {
     }
     const runner = _effect.run.bind(_effect);
     runner.effect = _effect; // 可以在run方法上获取到effect的引用
-    return runner; //外界可以自己让其执行run
+    return runner; //外界可以自己让其执行run,
 }
 
 export let activeEffect; // 正在执行的副作用函数effect，标识哪个副作用正在执行
