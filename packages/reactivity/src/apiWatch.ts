@@ -71,4 +71,9 @@ function doWatch(source, cb, { deep, immediate }) { //解构deep
         effect.run
     }
 
+    const unwatch = () => {
+        effect.stop();
+    };
+    return unwatch;
+
 }   

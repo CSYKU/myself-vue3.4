@@ -36,11 +36,12 @@
     // 分页逻辑，axios.get(/?pageSizes=${size.value} & pageNum = ${num.value})
     // 监听自己并且还是执行自己;可以用watchEffect;，很像effect。
 
-    watchEffect(() => {  //effect -> reactiveEffect(getter,schedulder)
+    const unwatch = watchEffect(() => {  //effect -> reactiveEffect(getter,schedulder)
       console.log(state.name + state.age) //发现和effect很像
     }, {
-      flush: "sync",// 没有实现异步，默认是异步处理
+      flush: "sync",// 这里是同步执行，没有实现异步，源码默认是异步处理
     })
+    unwatch(); // stop watch;
 
     // watch(
     //   state, // 维护成取值器来监听，类似new ReactiveEffect(getter)中的getter
@@ -55,6 +56,8 @@
       state.name = 'abc';
       state.name = 'def'; // 实际只会执行一次，有个异步机制没实现
     }, 1000);
+
+    // computed 和watch 是  vue3基于effect实现 ，vue2基于watcher实现
   </script>
 </body>
 
