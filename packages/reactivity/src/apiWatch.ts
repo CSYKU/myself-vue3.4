@@ -9,6 +9,11 @@ export function watch(source, cb, options = {} as any) {
     return doWatch(source, cb, options)
 }
 
+export function watchEffect(source, options = {} as any) {
+    // 没有cb就是watchEffect
+    return doWatch(source, null, options as any)
+}
+
 // seen 防止重复引用递归死循环
 function traverse(source, depth, currentDepth = 0, seen = new Set()) {
     if (!isObject) {
@@ -44,11 +49,17 @@ function doWatch(source, cb, { deep, immediate }) { //解构deep
     let oldVlaue;
 
     const job = () => {
-        const newValue = effect.run();
-        cb(newValue, oldVlaue)
-        oldVlaue = newValue;
+        if (cb) {
+            const newValue = effect.run();
+            cb(newValue, oldVlaue)
+            oldVlaue = newValue;
+        } else {
+            effect.run()
+        };
     }
+
     const effect = new ReactiveEffect(getter, job)
+
     if (cb) {
         if (immediate) { // 先执行一次
             job();
@@ -57,6 +68,7 @@ function doWatch(source, cb, { deep, immediate }) { //解构deep
         }
     } else {
         // watchEffect
+        effect.run
     }
 
 }   

@@ -19,16 +19,42 @@
     // import { reactive, proxyRefs, toRef, toRefs, effect, ref, computed, watch, watchEffect } from './reactivity.js'
 
     import { reactive, effect, ref, toRef, toRefs, computed } from "./reactivity.js"
+    // vue 原来没暴露effetc api
+
+    //用effect模拟watch
+    /** 
+     const runner = effect(() => {
+     }, {
+       scheduler() {
+         runner()
+       }
+     })  
+     */
+
     // watch 运行时也用到，api不在响应式模块中，但是基于响应式实现，
     const state = reactive({ name: 'cs', address: { n: { n: 'sdj' } } })
-    watch(
-      state, // 维护成取值器来监听，类似new ReactiveEffect(getter)中的getter
-      function (oldValue, newValue, options = undefined) { //存在第三个参数没有实现
-        console.log(oldValue, newValue)
-      }, {
-      deep: false,
-    }
-    )
+    // 分页逻辑，axios.get(/?pageSizes=${size.value} & pageNum = ${num.value})
+    // 监听自己并且还是执行自己;可以用watchEffect;，很像effect。
+
+    watchEffect(() => {  //effect -> reactiveEffect(getter,schedulder)
+      console.log(state.name + state.age) //发现和effect很像
+    }, {
+      flush: "sync",// 没有实现异步，默认是异步处理
+    })
+
+    // watch(
+    //   state, // 维护成取值器来监听，类似new ReactiveEffect(getter)中的getter
+    //   function (oldValue, newValue, options = undefined) { //存在第三个参数没有实现
+    //     console.log(oldValue, newValue)
+    //   }, {
+    //   deep: false,
+    // }
+    // )
+
+    setTimeout(() => {
+      state.name = 'abc';
+      state.name = 'def'; // 实际只会执行一次，有个异步机制没实现
+    }, 1000);
   </script>
 </body>
 
