@@ -36,7 +36,7 @@ class refImpl {  //实现ref
 export function tarckRefValue(ref) {
     if (activeEffect) {
         trackEffect(activeEffect,
-            ref.dep = createDep(() => ref.dep = undefined, 'undefined'))
+            ref.dep = ref.dep || createDep(() => ref.dep = undefined, 'undefined')) // 存在bug，多次修改ref会重新创建一个映射表导致丢失上一次。
     }
 }
 
