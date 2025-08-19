@@ -48,10 +48,21 @@ function doWatch(source, cb, { deep, immediate }) { //解构deep
     }
     let oldVlaue;
 
+    let clean;
+    const onCleanUp = (fn) => {
+        clean = () => {
+            fn()
+            clean = undefined;
+        }
+    }
+
     const job = () => {
         if (cb) {
             const newValue = effect.run();
-            cb(newValue, oldVlaue)
+            if (clean) {
+                clean() //第一次为空，再次执行就清理上一次 一个闭包
+            }
+            cb(newValue, oldVlaue, onCleanUp)
             oldVlaue = newValue;
         } else {
             effect.run()
