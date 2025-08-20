@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的网页</title>
+</head>
+
+<body>
+    <div id="app"></div>
+    <script type="module">
+        // render用内置渲染器来渲染，(渲染dom的)
+        // createRender 自己创建渲染器 (可以自己提供渲染方式)
+        // h方法可以创建一个虚拟dom参数(type, propsOrChildern,children)
+        // runtime-dom 它的作用是提供DOM API (提供一系列dom操作api的方法)
+
+        // h不一定是runtime-dom提供，是针对不同浏览器的跨平台服务端渲染也可以用
+
+        // 关系
+        //  @vue/runtime-dom -->  @vue/runtime-core (用于跨平台) -->  @vue/reactivity
+
+        import { render, createRenderer, h } from "/node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js"
+        let ele = h("h1", "name abc")  //一个虚拟h1元素节点
+        console.log(ele)
+        const renderer = createRenderer({
+            createElement(type) { //需要创建一个元素
+                console.log(type)
+                // 这里也可以用cavans等，根据需求画元素 如cavans,webgl
+                return document.createElement("h1")
+            },
+            setElementText(el, text) {
+                el.textContent = text;
+            },
+            insert(el, container) {
+                container.appendChild(el);
+            }
+        })
+
+        renderer.render(ele, app) // 用自定义的渲染器
+        //  render(ele, app) // 将虚拟节点挂载上去，并渲染上去
+    </script>
+</body>
+
+</html>

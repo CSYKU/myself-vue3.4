@@ -13,7 +13,6 @@
     ]
   },
   "dependencies": {
-    "@vue/shared": "workspace:*",
-    "shared": "link:packages\\shared"
+    "@vue/shared": "workspace:*"
   }
 }
