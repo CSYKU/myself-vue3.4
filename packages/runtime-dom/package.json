@@ -1,0 +1,19 @@
+{
+  "name": "@vue/runtiem-dom",
+  "version": "1.0.0",
+  "main": "index.js",
+  "module": "dist/runtiem-dom.esm-bundler.js",
+  "unpkg": "dist/runtiem-dom.global.js",
+  "buildOptions": {
+    "name": "RuntimeDom",
+    "formats": [
+      "esm-bundler",
+      "cjs",
+      "global"
+    ]
+  },
+  "dependencies": {
+    "@vue/shared": "workspace:*",
+    "shared": "link:packages\\shared"
+  }
+}
