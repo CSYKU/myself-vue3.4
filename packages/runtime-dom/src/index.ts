@@ -4,6 +4,9 @@ import { createRenderer } from "@vue/runtime-core"  //runtime-core 会引入reac
 
 // 将节点操作和属性操作合并在一起
 const rederOptions = Object.assign({ patchProp }, nodeOpers)
-export { rederOptions } //
+// reder 方法采用dom api来渲染
+export const render = (vnode, container) => {
+    return createRenderer(rederOptions).render(vnode, container)
+}
 
 export * from "@vue/runtime-core";
