@@ -20,25 +20,26 @@
 
         // 关系
         //  @vue/runtime-dom -->  @vue/runtime-core (用于跨平台) -->  @vue/reactivity
+        import { h } from "/node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js"
 
-        import { render, createRenderer, h } from "/node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js"
-        let ele = h("h1", "name abc")  //一个虚拟h1元素节点
-        console.log(ele)
-        const renderer = createRenderer({
-            createElement(type) { //需要创建一个元素
-                console.log(type)
-                // 这里也可以用cavans等，根据需求画元素 如cavans,webgl
-                return document.createElement("h1")
-            },
-            setElementText(el, text) {
-                el.textContent = text;
-            },
-            insert(el, container) {
-                container.appendChild(el);
-            }
-        })
+        import { render } from "./runtime-dom.js"
+        let ele = h("h1", { style: { color: "red" } }, "name abc")  //一个虚拟h1元素节点
 
-        renderer.render(ele, app) // 用自定义的渲染器
+        
+        // const renderer = createRenderer({
+        //     createElement(type) { //需要创建一个元素
+        //         console.log(type)
+        //         // 这里也可以用cavans等，根据需求画元素 如cavans,webgl
+        //         return document.createElement("h1")
+        //     },
+        //     setElementText(el, text) {
+        //         el.textContent = text;
+        //     },
+        //     insert(el, container) {
+        //         container.appendChild(el);
+        //     }
+        // })
+        render(ele, app) // 用自定义的渲染器
         //  render(ele, app) // 将虚拟节点挂载上去，并渲染上去
     </script>
 </body>

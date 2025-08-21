@@ -11,8 +11,12 @@ export function createRenderer(renderOptions) {
         patchProp: hostPatchProp,
     } = renderOptions;
 
-    const render = (vnode, container) => { };
+    const render = (vnode, container) => {
+        // 将虚拟节点变成真实节点
+    };
     return {
         render,
     }
 }
+
+// 完全不关心render 层api，所有可以跨平台

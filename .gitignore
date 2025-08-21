@@ -3,3 +3,4 @@ packages/reactivity/dist/reactivity.js
 packages/reactivity/dist/reactivity.js.map
 packages/runtime-dom/dist/runtime-dom.js
 packages/runtime-dom/dist/runtime-dom.js.map
+pnpm-lock.yaml
