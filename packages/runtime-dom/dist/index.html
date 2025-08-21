@@ -23,9 +23,14 @@
         import { h } from "/node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js"
 
         import { render } from "./runtime-dom.js"
-        let ele = h("h1", { style: { color: "red" } }, "name abc")  //一个虚拟h1元素节点
+        let ele1 = h("h1", [h("p", "wod P节点"), h("P", "P2节点"), "abc"],); //一个虚拟 h1元素节点
+        let ele2 = h("h1", { style: { color: "green" } }, "name abc");
 
-        
+        render(ele1, app);
+        setTimeout(() => {
+            render(ele2, app);
+        }, 3000)
+
         // const renderer = createRenderer({
         //     createElement(type) { //需要创建一个元素
         //         console.log(type)
@@ -38,8 +43,7 @@
         //     insert(el, container) {
         //         container.appendChild(el);
         //     }
-        // })
-        render(ele, app) // 用自定义的渲染器
+        // })// 用自定义的渲染器
         //  render(ele, app) // 将虚拟节点挂载上去，并渲染上去
     </script>
 </body>
