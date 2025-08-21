@@ -2,9 +2,9 @@
 
 export const nodeOpers = {
     // 如果第三个元素不传，相当于直接调用appendChild
-    inset(el, parent, anchor) {
+    insert(el, parent, anchor) {
         // appendChild parent.insertBefore(el,null)
-        parent.insertBefore(el.anchor || null)
+        parent.insertBefore(el, anchor || null)
     },
     remove(el) {
         // 移除dom元素

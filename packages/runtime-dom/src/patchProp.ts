@@ -10,7 +10,7 @@ import patchStyle from "./moudles/patchStyle";
 export default function patchProp(el, key, prevValue, nextValue) {
     if (key === 'class') {
         return patchClass(el, nextValue)
-    } else if (key === 'key') {
+    } else if (key === 'style') {
         return patchStyle(el, prevValue, nextValue)
     } else if (/^on[a-z]/.test(key)) { // onClick onMounseEnter等事件
         // el.addEventListener(key,nextValue)
