@@ -16,7 +16,7 @@ export function h(type, propOrChildren?, children?) {
                 return createVnode(type, propOrChildren)
             }
         // 数组|文本走这
-        createVnode(type, null, propOrChildren)
+        return createVnode(type, null, propOrChildren)
 
     } else {
         if (l > 3) {
@@ -27,6 +27,5 @@ export function h(type, propOrChildren?, children?) {
         }
         return createVnode(type, propOrChildren, children)
     }
-    return createVnode(type, propOrChildren, children)
 }
 

@@ -20,20 +20,25 @@
 
         // 关系
         //  @vue/runtime-dom -->  @vue/runtime-core (用于跨平台) -->  @vue/reactivity
-        import { h, render } from "/node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js"
-
+        // import { h, render } from "/node_modules/@vue/runtime-dom/dist/runtime-dom.esm-browser.js"
+        import { h, render, createVnode } from "./runtime-dom.js"
         //h参数类型 2个(类型,属性/儿子) 标准3个(类型,属性,儿子) 3个以上(从第三个开始都是儿子)
 
         // h(类型，属性，儿子)
         // h(类型，属性/儿子) 第二参数也可以是虚拟节点，带__v_isVnode标识
         // 3参数写法h("div","abc","def")保存，第二个参数会认为是属性，类型不对
-        let ele1 = h("h1", [h("p", "wod P节点"), h("P", "P2节点"), "abc"],); //一个虚拟 h1元素节点
-        let ele2 = h("h1", { style: { color: "green" } }, "name abc");
+        let ele1 = h("div", { style: { color: "red" } },
+            h("div", "b1"),
+            h("h1", "a1"),
+            createVnode("a", {}, "c1")); //一个虚拟 h1元素节点
+        // 编译后源码中全部采用的createVnode，为了优化,用h()也行,为了靶向更新
 
+        // let ele2 = h("h1", { style: { color: "green" } }, "name abc");
+        console.log("--", ele1)
         render(ele1, app);
-        setTimeout(() => {
-            render(ele2, app);
-        }, 3000)
+        // setTimeout(() => {
+        //     render(ele2, app);
+        // }, 3000)
 
         // const renderer = createRenderer({
         //     createElement(type) { //需要创建一个元素
