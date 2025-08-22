@@ -1,0 +1,21 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的网页测试更新节点</title>
+</head>
+
+<body>
+    <dvi id="app"></dvi>
+    <script type="module">
+        import { h, render, createVnode } from "./runtime-dom.js"
+        render(h('h1', "hellow"), app)
+        setTimeout(() => {
+            render(null, app);
+        }, 3000)
+    </script>
+
+</body>
+
+</html>
