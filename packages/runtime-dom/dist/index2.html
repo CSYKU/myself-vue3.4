@@ -10,9 +10,13 @@
     <dvi id="app"></dvi>
     <script type="module">
         import { h, render, createVnode } from "./runtime-dom.js"
+        const h1 = h("h1", "第一个");
+        const h2 = h("h1", "更改内容");
+        const h3 = h("div", { style: { color: "red" } }, "更改元素和属性");
+        const h4 = null
         render(h('h1', "hellow"), app)
         setTimeout(() => {
-            render(null, app);
+            render(h4, app);
         }, 3000)
     </script>
 

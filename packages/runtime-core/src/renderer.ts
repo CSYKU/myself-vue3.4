@@ -1,4 +1,5 @@
 import { ShapeFlags } from "@vue/shared";
+import { isSameVnode } from "./createVnode";
 
 export function createRenderer(renderOptions) {
     // core中不关心如何渲染
@@ -44,31 +45,97 @@ export function createRenderer(renderOptions) {
 
     }
 
+    const patchProps = (oldProps, newProps, el) => {
+        for (let key in newProps) {
+            hostPatchProp(el, key, oldProps[key], newProps[key])
+        }
+        for (let key in oldProps) {
+            if (!(key in newProps)) {
+                hostPatchProp(el, key, oldProps[key], null)
+            }
+        }
+
+    }
+    const unmountChildren = (children) => {
+        for (let i = 0; i < children.length; i++) {
+            let child = children[i];
+            unmount(child);
+        }
+    }
+
+    const patchChildren = (oldChildren, newChildern, el) => {
+        const c1 = oldChildren.children;
+        const c2 = newChildern.children;
+        const prevShapeFlag = c1.shapeFlag;
+        const shapeFlag = c2.shapeFlag;
+        // 0.(新,老) ---处理--> (处理)
+        // 1.(文本, 数组)---->(移除老的)
+        // 2.(文本, 文本)---->(替换)
+        // 3.(数组, 数组)---->(全量diff)
+        // 4.(非数组,数组)---->(移除老的)
+        // 5.(空  ,文本)----->(替换/移除老的)
+        // 6.(数组,文本)---->()
+        //
+        if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
+            if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+                unmountChildren(c1)
+            }
+            if (c1 !== c2) {
+                hostSetElementText(el, c2)
+            }
+        }
+        if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+            if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+                //全量diff数组
+            } else {
+                unmountChildren(c1);
+            }
+        } else {
+            hostSetElementText(el, "");
+        }
+        if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
+            mountChildren(c2, el)
+        }
+
+    }
+
+    const patchElement = (n1, n2, container) => {
+        // 1比较元素差异,一定会复用dom
+        // 2.比较属性和元素子节点
+        let el = (n2.el = n1.el);
+        let oldProps = n1.props || {}
+        let newProps = n2.props || {}
+        patchProps(oldProps, newProps, container)
+        patchChildren(n1, n2, el)
+    }
     //渲染和更新都走这
     const patch = (n1, n2, container) => {
         if (n1 === n2) { // 渲染同一个元素跳过
             return;
         }
+        if (n1 && isSameVnode(n1, n2)) {
+            //暴力逻辑，去除n1节点，且n1=null继续走n2初始化挂载逻辑   
+            unmount(n1); n1 = null;
+        }
         if (n1 == null) { //n1即为空没有替换节点，就是只渲染
             mountedElement(n2, container)
+        } else {
+            patchElement(n1, n2, container)
         }
     }
     const unmount = (vnode) => hostRemove(vnode.el)
     // 多次调用render会进行虚拟节点的比较，在进行更新
     const render = (vnode, container) => {
-        console.log(container, '容器')
         if (vnode == null) {
             if (container._vnode) {
-                container._vnode
-                console.log(container._vndoe, "移除")
                 unmount(container._vnode)
             }
         }
         // 将虚拟节点变成真实节点进行渲染
         patch(container._vnode || null, vnode, container)
-        console.log(vnode, '我的几点')
         container._vnode = vnode;
-        console.log(container._vnode, "vndo")
+        console.log(vnode, '我的几点')
+        console.log(container, "容器")
     };
     return {
         render,
