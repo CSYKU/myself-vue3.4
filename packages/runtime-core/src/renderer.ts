@@ -128,16 +128,26 @@ export function createRenderer(renderOptions) {
             let s1 = i;
             let s2 = i;
             const keyToNewIndexMap = new Map();//做一个映射表比对，没有删除，有的方便复用
+    
             for (let i = s2; i <= ic2; i++) {
+                const vnode = cn2[i]
+                keyToNewIndexMap.set(vnode.key, i)
+            }
+
+            for (let i = s1; i <= ic1; i++) {
                 const vnode = cn1[i];
                 const newIndex = keyToNewIndexMap.get(vnode.key)
                 if (newIndex == undefined) {
                     unmount(vnode);
                 } else {
-                    patch(vnode, cn2[newIndex], el)
+                    patch(vnode, cn2[newIndex], el) //在比较后递归,复用
                 }
             }
             //调整顺序，只能倒序插入(insertBefore)
+            //倒序插入不是最优，求出最长增长子序列可以减少插入dom操作
+            // 贪心算法+二分查找 可以方便的找出子序列
+
+
             let toBePatched = ic2 - s2 + 1; //倒序插入个数
             for (let i = toBePatched; i <= 0; i--) {
                 let newIndex = s2 + i;
