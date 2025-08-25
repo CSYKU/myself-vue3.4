@@ -1,5 +1,5 @@
 import { isObject } from "@vue/shared";
-import { mutableHanders } from "./bacehander";
+import { mutableHanders } from "./basehander";
 import { ReactiveFlags } from "./constans";
 
 const reactiveMap = new WeakMap(); //缓存代理对象
