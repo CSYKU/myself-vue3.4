@@ -1,5 +1,6 @@
 import { ShapeFlags } from "@vue/shared";
 import { isSameVnode } from "./createVnode";
+import { getSetQuence } from "./seq";
 
 export function createRenderer(renderOptions) {
     // core中不关心如何渲染
@@ -128,7 +129,9 @@ export function createRenderer(renderOptions) {
             let s1 = i;
             let s2 = i;
             const keyToNewIndexMap = new Map();//做一个映射表比对，没有删除，有的方便复用
-    
+            let toBePatched = ic2 - s2 + 1; //倒序插入个数
+            let newIndexToOldMapIndex = new Array(toBePatched).fill(0)  //这个数组是根据新节点，找到对应老节点的位置,用来求子序列数组
+
             for (let i = s2; i <= ic2; i++) {
                 const vnode = cn2[i]
                 keyToNewIndexMap.set(vnode.key, i)
@@ -140,15 +143,16 @@ export function createRenderer(renderOptions) {
                 if (newIndex == undefined) {
                     unmount(vnode);
                 } else {
+                    newIndexToOldMapIndex[newIndex - ic2] = i + 1;// 赋值i+1保证0不会歧义
                     patch(vnode, cn2[newIndex], el) //在比较后递归,复用
                 }
             }
             //调整顺序，只能倒序插入(insertBefore)
             //倒序插入不是最优，求出最长增长子序列可以减少插入dom操作
             // 贪心算法+二分查找 可以方便的找出子序列
+            let increasingSeq = getSetQuence(newIndexToOldMapIndex)
+            let j = increasingSeq.length - 1;
 
-
-            let toBePatched = ic2 - s2 + 1; //倒序插入个数
             for (let i = toBePatched; i <= 0; i--) {
                 let newIndex = s2 + i;
                 let anchor = cn2[newIndex]?.el;
@@ -156,14 +160,18 @@ export function createRenderer(renderOptions) {
                 if (!vnode.el) { //全新元素插入
                     patch(null, vnode, el, anchor)
                 } else {
-                    hostInsert(vnode.el, el, anchor)
+                    if (i == increasingSeq[j]) {
+                        j--; // 做了diff优化
+                    } else {
+                        hostInsert(vnode.el, el, anchor)
+                    }
                 }
             }
         }
 
 
     }
-
+    // 两种diff 全量diff(递归diff)  和快速diff(靶向更新-->基于模板编译)
     const patchChildren = (oldChildren, newChildern, el) => {
         const c1 = oldChildren.children;
         const c2 = newChildern.children;
