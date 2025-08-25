@@ -1,7 +1,8 @@
 import { ShapeFlags } from "@vue/shared";
 import { Fragment, Text, isSameVnode } from "./createVnode";
 import { getSetQuence } from "./seq";
-import { effect, reactive, ReactiveEffect } from "@vue/reactivity";
+import { reactive, ReactiveEffect } from "@vue/reactivity";
+import { queueJob } from "./scheduler";
 
 export function createRenderer(renderOptions) {
     // core中不关心如何渲染
@@ -265,7 +266,8 @@ export function createRenderer(renderOptions) {
                 instance.subTree = subTree;
             }
         }
-        const effect = new ReactiveEffect(componetUpdateFn, () => update)//参数调度函数可以包装优化
+        const effect = new ReactiveEffect(componetUpdateFn, () => queueJob(update))//参数调度函数可以包装优化
+        //  这里复杂没讲完，还有父子组件更新的顺序等，只做了异步更新处理
         const update = (instance.update = () => {
             effect.run()
         })
