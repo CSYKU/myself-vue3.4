@@ -15,20 +15,31 @@
             data() {
                 return { name: "js", age: "165" };
             },
+
+
+            // dom属性 $attrs (生产环境不是响应式的，开发是响应式)  js属性 props属性 (响应式) 
+            //所有属性减propsOptinos = attrs
+            props: {
+                name: String,
+                age: Number,
+            },
             render(proxy) {
+                // 里面写promis可能更新两次，但是一般不这么写
+                //this.age=100; promise.resolve().then(()=>{this.age=300})
+                console.log(proxy) // proxy 中有很多东西$attr $props $data $el 等
                 setTimeout(() => {
                     this.age++;
                     this.age++;
                 }, 1000);
                 return h("div", [
-                    h(Text, "my name is " + proxy.name),
+                    h(Text, "my name is " + proxy.$attrs.name),
                     h("a", this.age)
                 ])
             }
         }
         //  组件有两个虚拟节点组成，h(vuecomponent)=vnode和组件内产生的虚拟节点
         // render 函数返回的虚拟节点才是真正要渲染的节点  ==subTree
-        render(h(Vuecomponent), app)
+        render(h(Vuecomponent, { a: 1, name: "jjksd", age: 50 }), app)
     </script>
 
 </body>

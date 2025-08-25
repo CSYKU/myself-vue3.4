@@ -240,18 +240,44 @@ export function createRenderer(renderOptions) {
             patchChildren(n1, n2, container);
         }
     }
-    const mountCompoent = (n1, n2, container, anchor) => {
+    //初始化属性
+    const initProps = (instance, rawProps) => {
+        const props = {};
+        const attrs = {};
+        const propsOptions = instance.propsOptions || {} //组件中定义的
+        if (rawProps) {
+            for (let key in propsOptions) {
+                const value = rawProps[key];
+                if (key in propsOptions) { //这里可以做属性校验，判断value是否是符合传入类型
+                    props[key] = value;
+                } else {
+                    attrs[key] = value;
+                }
+            }
+        }
+        instance.attrs = attrs;
+        instance.props = reactive(props);// 这里源码是shallowReactive 因为props不需要深度监听,组件不能更改props，暂时用reactive替代
+    }
+    const mountCompoent = (vnode, container, anchor) => {
         //组件更新和初始化都是走这个函数
         //组件特点 可以基于自己状态重新渲染 effect 
-        const { data = () => { }, render } = n2.type;//type 是属性，children是插槽
-        const state = reactive(data());//将组件数据变成响应式 参考Vuex状态管理工具
+        const { data = () => { }, render, props, propsOptions } = vnode.type;//type 是属性，children是插槽
+        const state = reactive(data());//组件状态 将组件数据变成响应式 参考Vuex状态管理工具
         const instance = {
             state,  //状态
-            vnode: n2,  //组件的虚拟节点
+            vnode,  //组件的虚拟节点
             subTree: null,  //子树
             isMounted: false,   //是否挂载完成
             update: null,     // 组件的更新函数
+            attrs: {},
+            props: {},
+            propsOptions,
+            component: null, // 用来关联复用
         }
+        //根据propsOptions区分props和attrs
+        vnode.component = instance
+        //元素更新 n2.el = n1.el 同理 组件更新  vnode.component.subTree.el = vnode.component.subTree.el
+        initProps(instance, vnode.props);
         const componetUpdateFn = () => {
             //区分更新或者渲染 
             if (instance.isMounted) {
@@ -266,7 +292,9 @@ export function createRenderer(renderOptions) {
                 instance.subTree = subTree;
             }
         }
-        const effect = new ReactiveEffect(componetUpdateFn, () => queueJob(update))//参数调度函数可以包装优化
+
+        //参数调度函数可以包装优化
+        const effect = new ReactiveEffect(componetUpdateFn, () => queueJob(update))
         //  这里复杂没讲完，还有父子组件更新的顺序等，只做了异步更新处理
         const update = (instance.update = () => {
             effect.run()
@@ -275,7 +303,7 @@ export function createRenderer(renderOptions) {
     }
     const processComponet = (n1, n2, container, anchor) => {
         if (n1 === null) {
-            mountCompoent(n1, n2, container, anchor);
+            mountCompoent(n2, container, anchor);
         } else {
             //组件更新
         }
