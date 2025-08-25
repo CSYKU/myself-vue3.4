@@ -16,6 +16,10 @@
                 return { name: "js", age: "165" };
             },
             render() {
+                setTimeout(() => {
+                    this.age++;
+                    this.age++;
+                }, 1000);
                 return h("div", [
                     h(Text, "my name is " + this.name),
                     h("a", this.age)
