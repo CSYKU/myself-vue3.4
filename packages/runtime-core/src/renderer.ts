@@ -1,5 +1,5 @@
 import { ShapeFlags } from "@vue/shared";
-import { Text, isSameVnode } from "./createVnode";
+import { Fragment, Text, isSameVnode } from "./createVnode";
 import { getSetQuence } from "./seq";
 
 export function createRenderer(renderOptions) {
@@ -230,6 +230,14 @@ export function createRenderer(renderOptions) {
             }
         }
     }
+
+    const processFragment = (n1, n2, container) => {
+        if (n1 == null) {
+            mountChildren(n2.children, container)
+        } else {
+            patchChildren(n1, n2, container);
+        }
+    }
     //渲染和更新都走这
     const patch = (n1, n2, container, anchor = null) => {
         if (n1 === n2) { // 渲染同一个元素跳过
@@ -239,22 +247,25 @@ export function createRenderer(renderOptions) {
             //暴力逻辑，去除n1节点，且n1=null继续走n2初始化挂载逻辑   
             unmount(n1); n1 = null;
         }
-        // if (n1 == null) { //n1即为空没有替换节点，就是只渲染
-        //     console.log(n2, "不可能为空")
-        //     mountedElement(n2, container)
-        // } else {
-        //     patchElement(n1, n2, container, anchor)
-        // }
         const { type } = n2;
         switch (type) {
             case Text:
                 processText(n1, n2, container);
                 break;
+            case Fragment:
+                processFragment(n1, n2, container);
+                break;
             default:
                 processElement(n1, n2, container, anchor)
         }
     }
-    const unmount = (vnode) => hostRemove(vnode.el)
+    const unmount = (vnode) => {
+        if (vnode.type === Fragment) {
+            unmountChildren(vnode.children)
+        } else {
+            hostRemove(vnode.el)
+        }
+    }
     // 多次调用render会进行虚拟节点的比较，在进行更新
     const render = (vnode, container) => {
         if (vnode == null) {
