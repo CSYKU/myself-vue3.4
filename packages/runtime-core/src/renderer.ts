@@ -1,4 +1,4 @@
-import { ShapeFlags } from "@vue/shared";
+import { hasOwn, ShapeFlags } from "@vue/shared";
 import { Fragment, Text, isSameVnode } from "./createVnode";
 import { getSetQuence } from "./seq";
 import { reactive, ReactiveEffect } from "@vue/reactivity";
@@ -273,21 +273,55 @@ export function createRenderer(renderOptions) {
             props: {},
             propsOptions,
             component: null, // 用来关联复用
+            proxy: null,//代理 data,attrs,props 方便使用
         }
         //根据propsOptions区分props和attrs
         vnode.component = instance
         //元素更新 n2.el = n1.el 同理 组件更新  vnode.component.subTree.el = vnode.component.subTree.el
+        const publicProperty = {
+            $attrs: (instance) => instance.attrs,
+            // $slots...
+        }
         initProps(instance, vnode.props);
+        instance.proxy = new Proxy(instance, {
+            get(target, key) {
+                // data和props属性中名字不要重名
+                const { state, props } = target; // 没有attr
+                if (state && hasOwn(target, key)) {
+                    return state[key];
+                } else if (props && hasOwn(target, key)) {
+                    return props[key];
+                }
+                const getter = publicProperty[key] //通过不通策略来访问对于的方法
+                if (getter) {
+                    return getter(target)
+                }
+
+                // 对于一些无法修改的属性 如&solts $attrs等 取值 $attrs -> instance.attrs
+            },
+            set(target, key, value) {
+                const { state, props } = target;
+                if (state && hasOwn(target, key)) {
+                    state[key] = value;
+                } else if (props && hasOwn(target, key)) {
+                    // props[key] = value;
+                    // 一般props只取值，内部可以修改嵌套属性(内部不报错)但是不合法
+                    console.warn('props is readOnly');
+                    return false;
+                }
+                return true;
+            }
+        })
         const componetUpdateFn = () => {
             //区分更新或者渲染 
             if (instance.isMounted) {
-                const subTree = render.call(state, state)//暂时用state代替prop
+                const subTree = render.call(instance.props, instance.props)//暂时用state代替prop
                 instance.subTree = subTree;
                 patch(null, subTree, container, anchor)
                 instance.isMounted = true
             } else {
                 // 基于状态的组件更新 还有基于属性的
-                const subTree = render.call(state, state)
+                const subTree = render.call(instance.props, instance.props)
                 patch(instance.subTree, subTree, container, anchor)
                 instance.subTree = subTree;
             }
