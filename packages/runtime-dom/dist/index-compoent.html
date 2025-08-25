@@ -1,0 +1,32 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的网页测试更新节点</title>
+</head>
+
+<body>
+    <dvi id="app"></dvi>
+    <script type="module">
+        import { h, render, createVnode } from "./runtime-dom.js"
+
+        const Vuecomponent = {
+            data() {
+                return { name: "js", age: "165" };
+            },
+            render() {
+                return h("div", [
+                    h(Text, "my name is " + this.name),
+                    h("a", this.age)
+                ])
+            }
+        }
+        //  组件有两个虚拟节点组成，h(vuecomponent)=vnode和组件内产生的虚拟节点
+        // render 函数返回的虚拟节点才是真正要渲染的节点  ==subTree
+        render(h(Vuecomponent), app)
+    </script>
+
+</body>
+
+</html>

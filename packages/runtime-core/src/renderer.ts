@@ -1,6 +1,7 @@
 import { ShapeFlags } from "@vue/shared";
 import { Fragment, Text, isSameVnode } from "./createVnode";
 import { getSetQuence } from "./seq";
+import { effect, reactive, ReactiveEffect } from "@vue/reactivity";
 
 export function createRenderer(renderOptions) {
     // core中不关心如何渲染
@@ -238,6 +239,45 @@ export function createRenderer(renderOptions) {
             patchChildren(n1, n2, container);
         }
     }
+    const mountCompoent = (n1, n2, container, anchor) => {
+        //组件更新和初始化都是走这个函数
+        //组件特点 可以基于自己状态重新渲染 effect 
+        const { data = () => { }, render } = n2.type;//type 是属性，children是插槽
+        const state = reactive(data());//将组件数据变成响应式 参考Vuex状态管理工具
+        const instance = {
+            state,  //状态
+            vnode: n2,  //组件的虚拟节点
+            subTree: null,  //子树
+            isMounted: false,   //是否挂载完成
+            update: null,     // 组件的更新函数
+        }
+        const componetUpdateFn = () => {
+            //区分更新或者渲染 
+            if (instance.isMounted) {
+                const subTree = render.call(state, state)//暂时用state代替prop
+                instance.subTree = subTree;
+                patch(null, subTree, container, anchor)
+                instance.isMounted = true
+            } else {
+                // 基于状态的组件更新 还有基于属性的
+                const subTree = render.call(state, state)
+                patch(instance.subTree, subTree, container, anchor)
+                instance.subTree = subTree;
+            }
+        }
+        const effect = new ReactiveEffect(componetUpdateFn, () => update)//参数调度函数可以包装优化
+        const update = (instance.update = () => {
+            effect.run()
+        })
+        update();
+    }
+    const processComponet = (n1, n2, container, anchor) => {
+        if (n1 === null) {
+            mountCompoent(n1, n2, container, anchor);
+        } else {
+            //组件更新
+        }
+    }
     //渲染和更新都走这
     const patch = (n1, n2, container, anchor = null) => {
         if (n1 === n2) { // 渲染同一个元素跳过
@@ -247,7 +287,7 @@ export function createRenderer(renderOptions) {
             //暴力逻辑，去除n1节点，且n1=null继续走n2初始化挂载逻辑   
             unmount(n1); n1 = null;
         }
-        const { type } = n2;
+        const { type, shapeFlag } = n2;
         switch (type) {
             case Text:
                 processText(n1, n2, container);
@@ -256,7 +296,12 @@ export function createRenderer(renderOptions) {
                 processFragment(n1, n2, container);
                 break;
             default:
-                processElement(n1, n2, container, anchor)
+                if (shapeFlag & ShapeFlags.ELEMENT) {
+                    processElement(n1, n2, container, anchor)
+                } else if (shapeFlag & ShapeFlags.COMPONENT) {
+                    //对组件处理 Vue3基本废弃函数式组件，因为没有性能节约
+                    processComponet(n1, n2, container, anchor)
+                }
         }
     }
     const unmount = (vnode) => {
