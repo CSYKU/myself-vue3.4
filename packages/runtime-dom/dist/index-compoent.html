@@ -15,13 +15,13 @@
             data() {
                 return { name: "js", age: "165" };
             },
-            render() {
+            render(proxy) {
                 setTimeout(() => {
                     this.age++;
                     this.age++;
                 }, 1000);
                 return h("div", [
-                    h(Text, "my name is " + this.name),
+                    h(Text, "my name is " + proxy.name),
                     h("a", this.age)
                 ])
             }
