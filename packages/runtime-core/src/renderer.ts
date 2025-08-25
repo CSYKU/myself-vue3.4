@@ -1,5 +1,5 @@
 import { ShapeFlags } from "@vue/shared";
-import { isSameVnode } from "./createVnode";
+import { Text, isSameVnode } from "./createVnode";
 import { getSetQuence } from "./seq";
 
 export function createRenderer(renderOptions) {
@@ -8,6 +8,7 @@ export function createRenderer(renderOptions) {
         insert: hostInsert,
         remove: hostRemove,
         createElement: hostCreateElement,
+        createText: hostCreateText,
         setText: hostSetText,
         setElementText: hostSetElementText,
         parentNode: hostParentNode,
@@ -218,6 +219,17 @@ export function createRenderer(renderOptions) {
         patchProps(oldProps, newProps, container)
         patchChildren(n1, n2, el)
     }
+
+    const processText = (n1, n2, container) => {
+        if (n1 = null) {
+            hostInsert(n2.el = hostCreateText(n2.children), container)
+        } else {
+            const el = (n2.el = n1.el)
+            if (n1.children !== n2.children) {
+                hostSetText(el, n2.children)
+            }
+        }
+    }
     //渲染和更新都走这
     const patch = (n1, n2, container, anchor = null) => {
         if (n1 === n2) { // 渲染同一个元素跳过
@@ -233,7 +245,14 @@ export function createRenderer(renderOptions) {
         // } else {
         //     patchElement(n1, n2, container, anchor)
         // }
-        processElement(n1, n2, container, anchor)
+        const { type } = n2;
+        switch (type) {
+            case Text:
+                processText(n1, n2, container);
+                break;
+            default:
+                processElement(n1, n2, container, anchor)
+        }
     }
     const unmount = (vnode) => hostRemove(vnode.el)
     // 多次调用render会进行虚拟节点的比较，在进行更新
