@@ -3,6 +3,7 @@ import { Fragment, Text, isSameVnode } from "./createVnode";
 import { getSetQuence } from "./seq";
 import { reactive, ReactiveEffect } from "@vue/reactivity";
 import { queueJob } from "./scheduler";
+import { createComponetInstance, setupCompoent } from "./compent";
 
 export function createRenderer(renderOptions) {
     // core中不关心如何渲染
@@ -239,79 +240,11 @@ export function createRenderer(renderOptions) {
         } else {
             patchChildren(n1, n2, container);
         }
-    }
-    //初始化属性
-    const initProps = (instance, rawProps) => {
-        const props = {};
-        const attrs = {};
-        const propsOptions = instance.propsOptions || {} //组件中定义的
-        if (rawProps) {
-            for (let key in propsOptions) {
-                const value = rawProps[key];
-                if (key in propsOptions) { //这里可以做属性校验，判断value是否是符合传入类型
-                    props[key] = value;
-                } else {
-                    attrs[key] = value;
-                }
-            }
-        }
-        instance.attrs = attrs;
-        instance.props = reactive(props);// 这里源码是shallowReactive 因为props不需要深度监听,组件不能更改props，暂时用reactive替代
-    }
-    const mountCompoent = (vnode, container, anchor) => {
-        //组件更新和初始化都是走这个函数
-        //组件特点 可以基于自己状态重新渲染 effect 
-        const { data = () => { }, render, props, propsOptions } = vnode.type;//type 是属性，children是插槽
-        const state = reactive(data());//组件状态 将组件数据变成响应式 参考Vuex状态管理工具
-        const instance = {
-            state,  //状态
-            vnode,  //组件的虚拟节点
-            subTree: null,  //子树
-            isMounted: false,   //是否挂载完成
-            update: null,     // 组件的更新函数
-            attrs: {},
-            props: {},
-            propsOptions,
-            component: null, // 用来关联复用
-            proxy: null,//代理 data,attrs,props 方便使用
-        }
-        //根据propsOptions区分props和attrs
-        vnode.component = instance
-        //元素更新 n2.el = n1.el 同理 组件更新  vnode.component.subTree.el = vnode.component.subTree.el
-        const publicProperty = {
-            $attrs: (instance) => instance.attrs,
-            // $slots...
-        }
-        initProps(instance, vnode.props);
-        instance.proxy = new Proxy(instance, {
-            get(target, key) {
-                // data和props属性中名字不要重名
-                const { state, props } = target; // 没有attr
-                if (state && hasOwn(target, key)) {
-                    return state[key];
-                } else if (props && hasOwn(target, key)) {
-                    return props[key];
-                }
-                const getter = publicProperty[key] //通过不通策略来访问对于的方法
-                if (getter) {
-                    return getter(target)
-                }
+    };
 
-                // 对于一些无法修改的属性 如&solts $attrs等 取值 $attrs -> instance.attrs
-            },
-            set(target, key, value) {
-                const { state, props } = target;
-                if (state && hasOwn(target, key)) {
-                    state[key] = value;
-                } else if (props && hasOwn(target, key)) {
-                    // props[key] = value;
-                    // 一般props只取值，内部可以修改嵌套属性(内部不报错)但是不合法
-                    console.warn('props is readOnly');
-                    return false;
-                }
-                return true;
-            }
-        })
+
+    function setupRenderEffect(instance, container, anchor) {
+        const { render } = instance;
         const componetUpdateFn = () => {
             //区分更新或者渲染 
             if (instance.isMounted) {
@@ -326,7 +259,6 @@ export function createRenderer(renderOptions) {
                 instance.subTree = subTree;
             }
         }
-
         //参数调度函数可以包装优化
         const effect = new ReactiveEffect(componetUpdateFn, () => queueJob(update))
         //  这里复杂没讲完，还有父子组件更新的顺序等，只做了异步更新处理
@@ -334,6 +266,28 @@ export function createRenderer(renderOptions) {
             effect.run()
         })
         update();
+    };
+    const mountCompoent = (vnode, container, anchor) => {
+        //组件更新和初始化都是走这个函数
+        //组件特点 可以基于自己状态重新渲染 effect 
+
+
+        // 1.先创建组件实例
+        const instance = (vnode.component = createComponetInstance(vnode))
+        // 2.给实例的属性赋值
+        setupCompoent(instance)
+
+        // 3.创建一个effect
+        setupRenderEffect(instance, container, anchor)
+
+        // const { data = () => { }, render, props, propsOptions } = vnode.type;//type 是属性，children是插槽
+        // const state = reactive(data());//组件状态 将组件数据变成响应式 参考Vuex状态管理工具
+
+        // vnode.component = instance
+        //元素更新 n2.el = n1.el 同理 组件更新  vnode.component.subTree.el = vnode.component.subTree.el
+
+
+
     }
     const processComponet = (n1, n2, container, anchor) => {
         if (n1 === null) {
