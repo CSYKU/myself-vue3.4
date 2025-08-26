@@ -233,6 +233,15 @@ export function createRenderer(renderOptions) {
             }
         }
     }
+    const hasPropChange = (prevProps, nextProps) => {
+        let nKeys = Object.keys(nextProps)
+        if (nKeys.length !== Object.keys(prevProps).length) return true;
+        for (let i = 0; i < nKeys.length; i++) {
+            const key = nKeys[i]
+            if (nextProps[key] !== prevProps[key])
+                return true;
+        }
+    }
 
     const processFragment = (n1, n2, container) => {
         if (n1 == null) {
@@ -241,10 +250,29 @@ export function createRenderer(renderOptions) {
             patchChildren(n1, n2, container);
         }
     };
-
+    const updataProps = (instance, prevProps, nextProps) => {
+        // 比对props差异后更新实例的props
+        if (hasPropChange(prevProps, nextProps)) {
+            for (let key in nextProps) {
+                instance.props[key] = nextProps[key];
+            }
+            for (let key in instance.props) {
+                if (!(key in nextProps)) {
+                    delete instance.props[key];
+                }
+            }
+        }
+    }
+    const updataComponet = (n1, n2, container, anchor) => {
+        // 不能直接patch 死循环
+        const instance = (n2.compoent = n1.compoent) // 复用组件实例 就是复用dom元素，相当于虚拟节点的el,html的真实元素
+        const { prosp: prevProps } = n1;
+        const { prosp: nextProps } = n2;
+        updataProps(instance, prevProps, nextProps) // children 里的slots也能触发更新
+    }
 
     function setupRenderEffect(instance, container, anchor) {
-        const { render } = instance;
+        const { render } = instance.vnode;
         const componetUpdateFn = () => {
             //区分更新或者渲染 
             if (instance.isMounted) {
@@ -294,6 +322,7 @@ export function createRenderer(renderOptions) {
             mountCompoent(n2, container, anchor);
         } else {
             //组件更新
+            updataComponet(n1, n2, container, anchor)
         }
     }
     //渲染和更新都走这
