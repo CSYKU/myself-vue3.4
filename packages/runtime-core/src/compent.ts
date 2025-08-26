@@ -15,6 +15,7 @@ export function createComponetInstance(vnode) {
         component: null, // 用来关联复用
         proxy: null,//代理 data,attrs,props 方便使用
         setupState: {},
+        esposed: null,
     }
     return instance;
 }
@@ -100,6 +101,14 @@ export function setupCompoent(instance) {
         const setupContent = {
             slots: instance.slots,
             attrs: instance.attrs,
+            espose(value) {
+                instance.esposed = value;
+            },
+            emit(event, ...payload) {
+                const eventName = `on${event[0].toUpperCase() + event.slice(1)}`
+                const handel = instance.vnode.props[eventName]
+                handel && handel(payload);
+            }
         }//setup上下文 
         const setupResult = setup(instance.props, setupContent)
         if (isFunction(setupResult)) {
