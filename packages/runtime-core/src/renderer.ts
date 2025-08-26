@@ -241,6 +241,7 @@ export function createRenderer(renderOptions) {
             if (nextProps[key] !== prevProps[key])
                 return true;
         }
+        return false;
     }
 
     const processFragment = (n1, n2, container) => {
@@ -262,15 +263,34 @@ export function createRenderer(renderOptions) {
                 }
             }
         }
+
     }
-    const updataComponet = (n1, n2, container, anchor) => {
+    const shuoldComponetUpdate = (n1, n2) => { // 选择是否触发更新，将属性更新合并进去
+        const { prosp: prevProps, children: prevChildren } = n1;
+        const { prosp: nextProps, children: nextChildren } = n2;
+        if (prevChildren || nextChildren) return true;//加上插槽的判断
+        if (prevProps === nextProps) return false; // 可以优化比对默认有插槽一定更新
+        return hasPropChange(prevProps, nextProps)
+    }
+    const updataComponet = (n1, n2) => {
         // 不能直接patch 死循环
         const instance = (n2.compoent = n1.compoent) // 复用组件实例 就是复用dom元素，相当于虚拟节点的el,html的真实元素
-        const { prosp: prevProps } = n1;
-        const { prosp: nextProps } = n2;
-        updataProps(instance, prevProps, nextProps) // children 里的slots也能触发更新
-    }
+        if (shuoldComponetUpdate(n1, n2)) {
+            instance.next = n2; // 添加next属性 如果存在说明是属性或插槽更新  不存在则为状态更新
+            instance.updata()
+        }
 
+        // const { prosp: prevProps } = n1;
+        // const { prosp: nextProps } = n2;
+        // updataProps(instance, prevProps, nextProps) // children 里的slots也能触发更新
+    }
+    const updataComponetPreRender = (instance, next) => {
+        instance.next = null;
+        // 换instance的vnode和props
+        instance.vnode = next // instance.props
+        updataProps(instance, instance.props, instance.next.props)
+
+    }
     function setupRenderEffect(instance, container, anchor) {
         const { render } = instance.vnode;
         const componetUpdateFn = () => {
@@ -282,6 +302,12 @@ export function createRenderer(renderOptions) {
                 instance.isMounted = true
             } else {
                 // 基于状态的组件更新 还有基于属性的
+                const { next } = instance
+                if (next) {
+                    // 跟新属性和插槽
+                    updataComponetPreRender(instance, next)
+                }
+
                 const subTree = render.call(instance.props, instance.props)
                 patch(instance.subTree, subTree, container, anchor)
                 instance.subTree = subTree;
@@ -298,14 +324,12 @@ export function createRenderer(renderOptions) {
     const mountCompoent = (vnode, container, anchor) => {
         //组件更新和初始化都是走这个函数
         //组件特点 可以基于自己状态重新渲染 effect 
-
-
         // 1.先创建组件实例
         const instance = (vnode.component = createComponetInstance(vnode))
         // 2.给实例的属性赋值
         setupCompoent(instance)
 
-        // 3.创建一个effect
+        // 3.创建一个effect  里面有状态更新 组件也是响应式，节点是数据响应式，组件是状态响应式，组件里面包含儿子节点和数据
         setupRenderEffect(instance, container, anchor)
 
         // const { data = () => { }, render, props, propsOptions } = vnode.type;//type 是属性，children是插槽
@@ -314,15 +338,13 @@ export function createRenderer(renderOptions) {
         // vnode.component = instance
         //元素更新 n2.el = n1.el 同理 组件更新  vnode.component.subTree.el = vnode.component.subTree.el
 
-
-
     }
     const processComponet = (n1, n2, container, anchor) => {
         if (n1 === null) {
             mountCompoent(n2, container, anchor);
         } else {
             //组件更新
-            updataComponet(n1, n2, container, anchor)
+            updataComponet(n1, n2)
         }
     }
     //渲染和更新都走这
