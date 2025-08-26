@@ -1,0 +1,57 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试setup</title>
+</head>
+
+<body>
+    <dvi id="app"></dvi>
+    <dvi id="app2"></dvi>
+    <script type="module">
+        import { h, render, createVnode, Fragment, ref } from "./runtime-dom.js"
+        // 组件更新有三种方式(状态data,属性props,插槽slots(也是属性一种属于children))
+
+        //setup 每个组件只会执行一次 可以放compoentsitionsApi组合式API   即reactive() ref
+        // setup 返回render函数作为状态
+        const VueCompoent = {
+            setup(props, { emit, attrs, expose, slots }) {
+                // ... reacitve computed
+                const a = ref(1);
+                //提供渲染逻辑
+                setTimeout(() => {
+                    a.value = 2;
+                }, 1000)
+                return {
+                    //setup返回函数，也可以返回对象，如果是render函数则忽略后面的render，对象就变成下面的proxy参数
+                    a: a,//不要a.value render会自动解包的
+                }
+            },
+            render(proxy) { // setup的返回值作为proxy了的状态
+                return h("div", proxy.a) // 相当  <div>{{a}}</div>
+            }
+        }
+        // 另一种写法
+        const VueCompoent2 = {
+            setup(props, { emit, attrs, expose, slots }) {
+                // ... reacitve computed
+                const a = ref(1);
+                //提供渲染逻辑
+                setTimeout(() => {
+                    a.value = 2;
+                }, 1000)
+                //vite在编译时会自动用这种导致看不到
+                return (proxy) => {  // 这里proxy是空等下一次更新才有值
+                    h("div", a.value)
+                }
+            },
+        }
+
+        render(h(VueCompoent, {}), app)
+        render(h(VueCompoent2, {}), app2)
+    </script>
+
+</body>
+
+</html>

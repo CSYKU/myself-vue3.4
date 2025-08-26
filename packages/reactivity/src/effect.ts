@@ -40,7 +40,7 @@ function postCleanEffect(effect) { //用在finally里
 }
 
 
-
+// 对effect的功能扩展  关联dep等依赖收集和追踪 做许多附加操作并且执行渲染
 export class ReactiveEffect {
     _trackId = 0;   //用于记录当前effect执行了几次，标识同一次执行中有多个相同的属性收集。
     _running = 0;   //effect是否在执行标识符
