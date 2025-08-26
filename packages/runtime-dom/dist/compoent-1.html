@@ -1,0 +1,26 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>通过属性组件更新</title>
+</head>
+
+<body>
+    <dvi id="app"></dvi>
+    <script type="module">
+        import { h, render, createVnode } from "./runtime-dom.js"
+        // 组件更新有三种方式(状态data,属性props,插槽slots(也是属性一种属于children))
+        const Vuecomponent = {
+            // flus instace.update
+            data() {
+                return { flag: true, address: '北京' }
+            }
+        }
+
+        render(h(Vuecomponent, app))
+    </script>
+
+</body>
+
+</html>
