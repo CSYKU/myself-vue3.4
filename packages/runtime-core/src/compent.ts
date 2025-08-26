@@ -1,5 +1,5 @@
 import { proxyRefs, reactive } from "@vue/reactivity";
-import { hasOwn, isFunction } from "@vue/shared";
+import { hasOwn, isFunction, ShapeFlags } from "@vue/shared";
 
 export function createComponetInstance(vnode) {
     const instance = {
@@ -10,6 +10,7 @@ export function createComponetInstance(vnode) {
         update: null,     // 组件的更新函数
         attrs: {},
         props: {},
+        slots: {}, //插槽
         propsOptions: vnode.type.props, //用户申明的哪些属性是组件的属性
         component: null, // 用来关联复用
         proxy: null,//代理 data,attrs,props 方便使用
@@ -42,6 +43,7 @@ const initProps = (instance, rawProps) => {
 
 const publicProperty = {
     $attrs: (instance) => instance.attrs,
+    $slots: (instance) => instance.slots,
     // $slots...
 }
 
@@ -72,10 +74,17 @@ const handeler = {
             // 一般props只取值，内部可以修改嵌套属性(内部不报错)但是不合法
             console.warn('props is readOnly');
             return false;
-        }if (setupState && hasOwn(setupState, key)) {
-            setupState[key]=value
+        } if (setupState && hasOwn(setupState, key)) {  //设置setup状态如改变slots emit等
+            setupState[key] = value
         }
         return true;
+    }
+}
+export function initSlots(instance, children) {
+    if (instance.vnode.ShapeFlags & ShapeFlags.SLOTS_CHILDREN) {
+        instance.slots = children
+    } else {
+        instance.slots = {}
     }
 }
 
@@ -83,11 +92,15 @@ export function setupCompoent(instance) {
     const { vnode } = instance;
     // 赋值属性
     initProps(instance, vnode.props);
+    initSlots(instance, vnode.children)
     // 赋值代理对象
     instance.proxy = new Proxy(instance, handeler)
     const { data = () => { }, render, setup } = vnode.type
     if (setup) {
-        const setupContent = {}//setup上下文 
+        const setupContent = {
+            slots: instance.slots,
+            attrs: instance.attrs,
+        }//setup上下文 
         const setupResult = setup(instance.props, setupContent)
         if (isFunction(setupResult)) {
             instance.render = setupResult;

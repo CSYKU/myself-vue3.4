@@ -1,0 +1,37 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>slot测试</title>
+</head>
+
+<body>
+    <dvi id="app"></dvi>
+    <script type="module">
+        import { h, render, createVnode, Fragment, ref } from "./runtime-dom.js"
+
+        // 另一种写法，参考上一版，用setup包下RenderCOmpent中的redner setup(proxy,{slots,...})
+        const RenderCompoent = {
+            render(proxy) {
+                return h(Fragment, [proxy.$slots.footer('尾部'), proxy.$slots.footer('尾部')]) // 相当  <div>{{a}}</div>
+            }
+        }
+        const VueCompoent = {
+            setup(props, { emit, attrs, expose, slots }) { //另一种写法可以写到RenderComponet中
+                return () => {
+                    h(RenderCompoent, null, {  // 三种插槽，默认、具名、作用域插槽
+                        default: (i) = h("h", "默认"),
+                        header: (i) => h("header", "变量" + i),
+                        footer: (i) => h("footer", "变量" + i)
+                    })
+                }
+            }
+        }
+
+        render(h(VueCompoent, {}), app)
+    </script>
+
+</body>
+
+</html>
