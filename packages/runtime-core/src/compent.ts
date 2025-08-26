@@ -110,7 +110,9 @@ export function setupCompoent(instance) {
                 handel && handel(payload);
             }
         }//setup上下文 
+
         const setupResult = setup(instance.props, setupContent)
+        // 判断setup执行返回的是函数还是对象
         if (isFunction(setupResult)) {
             instance.render = setupResult;
         } else {
@@ -123,7 +125,7 @@ export function setupCompoent(instance) {
         // data函数 中可以拿到props
         instance.data = reactive(data.call(instance.proxy))
     }
-    if (instance.render) {
+    if (!instance.render) {
         // 没有render才用自己的
         instance.render = render;
     }
