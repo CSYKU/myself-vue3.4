@@ -9,7 +9,7 @@
 <body>
     <dvi id="app"></dvi>
     <script type="module">
-        import { h, render, createVnode } from "./runtime-dom.js"
+        import { h, render, createVnode, Fragment } from "./runtime-dom.js"
         // 组件更新有三种方式(状态data,属性props,插槽slots(也是属性一种属于children))
 
         const RenderComponent = {
@@ -20,19 +20,19 @@
                 return h(Text, this.address)
             }
         }
-        const VueComponent = {
+        const VueCompoent = {
             data() {
                 return { flag: true };
             },
             render() {
-                return h(FragMent, null, [
-                    h("button", { onClick: () => { this.flag = !this.flag } }),
+                return h(Fragment, [
+                    h("button", { onClick: () => { this.flag = !this.flag } },"电我"),
                     h(RenderComponent, { address: this.flag ? "北京" : "上海" }),
                 ]);
             }
         }
 
-        render(h(Vuecomponent, {}, app))
+        render(h(VueCompoent, {}), app)
     </script>
 
 </body>
