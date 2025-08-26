@@ -72,7 +72,7 @@ export function toRefs() {
     return res;
 }
 
-export function proxyRef(objectWithRef) { //代理ref，effect中使用ref不用.value
+export function proxyRefs(objectWithRef) { //代理ref，effect中使用ref不用.value 不知道是否命名有问题
     return new Proxy(objectWithRef, {
         get(target, key, receiver) {
             let r = Reflect.get(target, key, receiver)
