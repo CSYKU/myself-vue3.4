@@ -1,0 +1,31 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>emit和expose测试</title>
+</head>
+
+<body>
+    <dvi id="app"></dvi>
+    <script type="module">
+        import { h, render, createVnode, Fragment, ref } from "./runtime-dom.js"
+
+        const VueCompoent = {
+            setup(props, { emit, attrs, expose, slots }) { //另一种写法可以写到RenderComponet中
+                return () => {
+                    h("button", { onClick: () => emit("onMyEvent", 100) }, "点我触发") //100是要抛出的参数
+                }
+            }
+        }
+
+        render(h(VueCompoent, { onMySevent: (value) => { alert(100) } }), app)
+        setTimeout(() => {
+
+            render(h(unll, app))
+        }, 2000);
+    </script>
+
+</body>
+
+</html>
