@@ -291,13 +291,16 @@ export function createRenderer(renderOptions) {
         updataProps(instance, instance.props, instance.next.props)
 
     }
+
+
     function setupRenderEffect(instance, container, anchor) {
-        const { render } = instance.vnode;
+        const { render } = instance;
         const componetUpdateFn = () => {
             //区分更新或者渲染 
             if (instance.isMounted) {
                 const subTree = render.call(instance.props, instance.props)//暂时用state代替prop
                 instance.subTree = subTree;
+                debugger;
                 patch(null, subTree, container, anchor)
                 instance.isMounted = true
             } else {
@@ -313,12 +316,13 @@ export function createRenderer(renderOptions) {
                 instance.subTree = subTree;
             }
         }
-        //参数调度函数可以包装优化
-        const effect = new ReactiveEffect(componetUpdateFn, () => queueJob(update))
-        //  这里复杂没讲完，还有父子组件更新的顺序等，只做了异步更新处理
         const update = (instance.update = () => {
             effect.run()
         })
+        //参数调度函数可以包装优化
+        const effect = new ReactiveEffect(componetUpdateFn, () => updata())//() => queueJob(update)
+        //  这里复杂没讲完，还有父子组件更新的顺序等，只做了异步更新处理
+
         update();
     };
     const mountCompoent = (vnode, container, anchor) => {
@@ -339,6 +343,7 @@ export function createRenderer(renderOptions) {
         //元素更新 n2.el = n1.el 同理 组件更新  vnode.component.subTree.el = vnode.component.subTree.el
 
     }
+
     const processComponet = (n1, n2, container, anchor) => {
         if (n1 === null) {
             mountCompoent(n2, container, anchor);
@@ -347,7 +352,9 @@ export function createRenderer(renderOptions) {
             updataComponet(n1, n2)
         }
     }
-    //渲染和更新都走这
+
+
+    //判断是那种类型的渲染和更新  渲染和更新都走这
     const patch = (n1, n2, container, anchor = null) => {
         if (n1 === n2) { // 渲染同一个元素跳过
             return;
@@ -385,15 +392,12 @@ export function createRenderer(renderOptions) {
         if (vnode == null) {
             if (container._vnode) {
                 unmount(container._vnode)
-                //源码使用else处理 教程不知道有没有
             }
         } else {
             patch(container._vnode || null, vnode, container)
         }
         // 将虚拟节点变成真实节点进行渲染
-        console.log(vnode, '我的几点')
         container._vnode = vnode;
-        console.log(container, "容器")
     };
     return {
         render,
