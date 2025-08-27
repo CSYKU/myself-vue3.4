@@ -45,13 +45,11 @@ export function createRenderer(renderOptions) {
         } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
             mountChildren(children, el)
         }
-        console.log(el)
         hostInsert(el, container, anchor);
     }
 
     const processElement = (n1, n2, container, anchor) => {
-        if (n1 == null) { //n1即为空没有替换节点，就是只渲染
-            console.log(n2, "不可能为空")
+        if (n1 == null) { //n1即为空没有替换节点，就是只渲
             mountedElement(n2, container, anchor)
         } else {
             patchElement(n1, n2, container)
@@ -224,7 +222,7 @@ export function createRenderer(renderOptions) {
     }
 
     const processText = (n1, n2, container) => {
-        if (n1 = null) {
+        if (n1 == null) {
             hostInsert(n2.el = hostCreateText(n2.children), container)
         } else {
             const el = (n2.el = n1.el)
@@ -297,32 +295,33 @@ export function createRenderer(renderOptions) {
         const { render } = instance;
         const componetUpdateFn = () => {
             //区分更新或者渲染 
-            if (instance.isMounted) {
-                const subTree = render.call(instance.props, instance.props)//暂时用state代替prop
+            if (!instance.isMounted) {
+                //  暂时用state代替prop 
+                // subTree就是要渲染的vnode patch的n1和n2
+                const subTree = render.call(instance.proxy, instance.proxy)//call第一个是this指向，第二个是参数
                 instance.subTree = subTree;
-                debugger;
                 patch(null, subTree, container, anchor)
-                instance.isMounted = true
+                instance.isMounted = true;
+                instance.subTree = subTree;
             } else {
                 // 基于状态的组件更新 还有基于属性的
-                const { next } = instance
+                const { next } = instance;
                 if (next) {
                     // 跟新属性和插槽
                     updataComponetPreRender(instance, next)
                 }
-
-                const subTree = render.call(instance.props, instance.props)
+                const subTree = render.call(instance.proxy, instance.proxy)
                 patch(instance.subTree, subTree, container, anchor)
                 instance.subTree = subTree;
             }
         }
+        //参数调度函数可以包装优化
+        const effect = new ReactiveEffect(componetUpdateFn, () => queueJob(update))//() => updata()
+        //  这里复杂没讲完，还有父子组件更新的顺序等，只做了异步更新处理
+
         const update = (instance.update = () => {
             effect.run()
         })
-        //参数调度函数可以包装优化
-        const effect = new ReactiveEffect(componetUpdateFn, () => updata())//() => queueJob(update)
-        //  这里复杂没讲完，还有父子组件更新的顺序等，只做了异步更新处理
-
         update();
     };
     const mountCompoent = (vnode, container, anchor) => {
