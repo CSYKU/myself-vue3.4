@@ -28,7 +28,7 @@ const initProps = (instance, rawProps) => {
     const attrs = {};
     const propsOptions = instance.propsOptions || {} //组件中定义的
     if (rawProps) {
-        for (let key in propsOptions) {
+        for (let key in rawProps) {
             const value = rawProps[key];
             if (key in propsOptions) { //这里可以做属性校验，判断value是否是符合传入类型
                 props[key] = value;
@@ -52,18 +52,17 @@ const handeler = {
     get(target, key) {
         // data和props属性中名字不要重名
         const { data, props, setupState } = target; // 没有attr
-        if (data && hasOwn(target, key)) {
+        if (data && hasOwn(data, key)) { //data函数里
             return data[key];
-        } else if (props && hasOwn(target, key)) {
+        } else if (props && hasOwn(props, key)) { //外面传
             return props[key];
         } else if (setupState && hasOwn(setupState, key)) {
             return setupState[key]
         }
-        const getter = publicProperty[key] //通过不通策略来访问对于的方法
+        const getter = publicProperty[key] //通过不同策略来访问对应的方法
         if (getter) {
             return getter(target)
         }
-
         // 对于一些无法修改的属性 如&solts $attrs等 取值 $attrs -> instance.attrs
     },
     set(target, key, value) {
