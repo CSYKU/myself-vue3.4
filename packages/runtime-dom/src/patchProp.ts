@@ -12,7 +12,7 @@ export default function patchProp(el, key, prevValue, nextValue) {
         return patchClass(el, nextValue)
     } else if (key === 'style') {
         return patchStyle(el, prevValue, nextValue)
-    } else if (/^on[a-z]/.test(key)) { // onClick onMounseEnter等事件
+    } else if (/^on[^a-z]/.test(key)) { // onClick onMounseEnter等事件
         // el.addEventListener(key,nextValue)
         return patchEvent(el, key, nextValue)
     } else { // 还可以有其他key，没有继续写下去
