@@ -17,7 +17,7 @@ export default function patchEvent(el, name, nextValue) { //可以参数数组�
 
     if (nextValue) { //事件以前没有或者不同名
         const invoker = (invokers[name] = createInvoker(nextValue)) //创建一个调用函数，并且内部会执行nextValue
-        el.addEventListen(eventName, invoker)
+        return el.addEventListener(eventName, invoker);
     }
     if (exisitingInvokers) {
         //现在没有，以前有 移除事件和缓存
