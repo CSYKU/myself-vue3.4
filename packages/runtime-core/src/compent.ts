@@ -13,7 +13,7 @@ export function createComponetInstance(vnode) {
         slots: {}, //插槽
         propsOptions: vnode.type.props, //用户申明的哪些属性是组件的属性
         component: null, // 用来关联复用
-        proxy: null,//代理 data,attrs,props 方便使用
+        proxy: null,//代理这个实例  data,attrs,props 方便使用
         setupState: {},
         esposed: null,
     }
@@ -82,7 +82,7 @@ const handeler = {
     }
 }
 export function initSlots(instance, children) {
-    if (instance.vnode.ShapeFlags & ShapeFlags.SLOTS_CHILDREN) {
+    if (instance.vnode.shapeFlag & ShapeFlags.SLOTS_CHILDREN) {
         instance.slots = children
     } else {
         instance.slots = {}
@@ -109,8 +109,8 @@ export function setupCompoent(instance) {
                 const handel = instance.vnode.props[eventName]
                 handel && handel(payload);
             }
-        }//setup上下文 
-
+        }
+        //setup上下文 
         const setupResult = setup(instance.props, setupContent)
         // 判断setup执行返回的是函数还是对象
         if (isFunction(setupResult)) {
