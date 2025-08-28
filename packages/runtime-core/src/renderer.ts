@@ -49,7 +49,7 @@ export function createRenderer(renderOptions) {
     }
 
     const processElement = (n1, n2, container, anchor) => {
-        if (n1 == null) { //n1即为空没有替换节点，就是只渲
+        if (n1 == null) { //n1即为空没有替换节点，就是只渲染
             mountedElement(n2, container, anchor)
         } else {
             patchElement(n1, n2, container)
@@ -289,8 +289,6 @@ export function createRenderer(renderOptions) {
         updataProps(instance, instance.props, instance.next.props)
 
     }
-
-
     function setupRenderEffect(instance, container, anchor) {
         const { render } = instance;
         const componetUpdateFn = () => {
