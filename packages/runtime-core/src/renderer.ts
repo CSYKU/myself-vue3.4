@@ -288,6 +288,8 @@ export function createRenderer(renderOptions) {
         // 换instance的vnode和props
         instance.vnode = next // instance.props
         updataProps(instance, instance.props, instance.next.props)
+        //更新合并新老插槽
+        Object.assign(instance.slots, next.children)
 
     }
     function renderComputent(instance) { //源码在初始化时区分的
