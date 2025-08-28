@@ -290,6 +290,14 @@ export function createRenderer(renderOptions) {
         updataProps(instance, instance.props, instance.next.props)
 
     }
+    function renderComputent(instance) { //源码在初始化时区分的
+        const { render, vnode, props, proxy, attrs } = instance
+        if (vnode.shapeFlag & ShapeFlags.SLOTS_CHILDREN) {
+            return render.call(proxy, proxy)
+        } else {
+            return vnode.type(attrs)
+        }
+    }
     function setupRenderEffect(instance, container, anchor) {
         const { render } = instance;
         const componetUpdateFn = () => {
@@ -301,8 +309,7 @@ export function createRenderer(renderOptions) {
                 }
                 //  暂时用state代替prop 
                 // subTree就是要渲染的vnode patch的n1和n2
-                const subTree = render.call(instance.proxy, instance.proxy)//call第一个是this指向，第二个是参数
-                instance.subTree = subTree;
+                const subTree = renderComputent(instance);
                 patch(null, subTree, container, anchor)
                 instance.isMounted = true;
                 instance.subTree = subTree;
@@ -319,7 +326,7 @@ export function createRenderer(renderOptions) {
                 if (bu) {
                     invokArray(bu);
                 }
-                const subTree = render.call(instance.proxy, instance.proxy)
+                const subTree = renderComputent(instance);
                 patch(instance.subTree, subTree, container, anchor)
                 instance.subTree = subTree;
                 if (u) {
