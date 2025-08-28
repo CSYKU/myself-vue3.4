@@ -337,7 +337,6 @@ export function createRenderer(renderOptions) {
         //参数调度函数可以包装优化
         const effect = new ReactiveEffect(componetUpdateFn, () => queueJob(update))//() => updata()
         //  这里复杂没讲完，还有父子组件更新的顺序等，只做了异步更新处理
-
         const update = (instance.update = () => {
             effect.run()
         })
@@ -350,16 +349,8 @@ export function createRenderer(renderOptions) {
         const instance = (vnode.component = createComponetInstance(vnode, parentComponent))
         // 2.给实例的属性赋值
         setupCompoent(instance)
-
         // 3.创建一个effect  里面有状态更新 组件也是响应式，节点是数据响应式，组件是状态响应式，组件里面包含儿子节点和数据
         setupRenderEffect(instance, container, anchor, parentComponent)
-
-        // const { data = () => { }, render, props, propsOptions } = vnode.type;//type 是属性，children是插槽
-        // const state = reactive(data());//组件状态 将组件数据变成响应式 参考Vuex状态管理工具
-
-        // vnode.component = instance
-        //元素更新 n2.el = n1.el 同理 组件更新  vnode.component.subTree.el = vnode.component.subTree.el
-
     }
 
     const processComponet = (n1, n2, container, anchor, parentComponent) => {
@@ -392,6 +383,14 @@ export function createRenderer(renderOptions) {
             default:
                 if (shapeFlag & ShapeFlags.ELEMENT) {
                     processElement(n1, n2, container, anchor, parentComponent)
+                } else if (shapeFlag & ShapeFlags.TELEPORT) {
+                    type.process(n1, n2, container, anchor, parentComponent, {
+                        mountChildren,
+                        patchChildren,
+                        move(vnode, container, anchor) {
+                            hostInsert(vnode.compent ? vnode.compent.subTree : vnode.el, container, anchor)
+                        }
+                    })
                 } else if (shapeFlag & ShapeFlags.COMPONENT) {
                     //对组件处理 Vue3基本废弃函数式组件，因为没有性能节约
                     processComponet(n1, n2, container, anchor, parentComponent)
@@ -413,6 +412,8 @@ export function createRenderer(renderOptions) {
         const { shapeFlag } = vnode
         if (vnode.type === Fragment) {
             unmountChildren(vnode.children)
+        } else if (shapeFlag & ShapeFlags.TELEPORT) {
+            vnode.type.remove(vnode, unmountChildren)
         } else if (shapeFlag & ShapeFlags.COMPONENT) {
             unmount(vnode.compent.subTree)
         } else {
