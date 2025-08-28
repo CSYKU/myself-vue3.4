@@ -4,6 +4,7 @@ import { getSetQuence } from "./seq";
 import { reactive, ReactiveEffect } from "@vue/reactivity";
 import { queueJob } from "./scheduler";
 import { createComponetInstance, setupCompoent } from "./compent";
+import { invokArray } from "./apiLifecycle";
 
 export function createRenderer(renderOptions) {
     // core中不关心如何渲染
@@ -294,6 +295,10 @@ export function createRenderer(renderOptions) {
         const componetUpdateFn = () => {
             //区分更新或者渲染 
             if (!instance.isMounted) {
+                const { bm, m } = instance;
+                if (bm) {
+                    invokArray(bm);
+                }
                 //  暂时用state代替prop 
                 // subTree就是要渲染的vnode patch的n1和n2
                 const subTree = render.call(instance.proxy, instance.proxy)//call第一个是this指向，第二个是参数
@@ -301,16 +306,25 @@ export function createRenderer(renderOptions) {
                 patch(null, subTree, container, anchor)
                 instance.isMounted = true;
                 instance.subTree = subTree;
+                if (m) {
+                    invokArray(m);
+                }
             } else {
                 // 基于状态的组件更新 还有基于属性的
-                const { next } = instance;
+                const { next, bu, u } = instance;
                 if (next) {
                     // 跟新属性和插槽
                     updataComponetPreRender(instance, next)
                 }
+                if (bu) {
+                    invokArray(bu);
+                }
                 const subTree = render.call(instance.proxy, instance.proxy)
                 patch(instance.subTree, subTree, container, anchor)
                 instance.subTree = subTree;
+                if (u) {
+                    invokArray(u);
+                }
             }
         }
         //参数调度函数可以包装优化

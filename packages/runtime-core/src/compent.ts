@@ -109,8 +109,10 @@ export function setupCompoent(instance) {
                 handel && handel(payload);
             }
         }
-        //setup上下文 
+        //setup上下文  
+        setCurrentInstance(instance);
         const setupResult = setup(instance.props, setupContent)
+        unsetCurrentInstance();
         // 判断setup执行返回的是函数还是对象
         if (isFunction(setupResult)) {
             instance.render = setupResult;
@@ -129,3 +131,14 @@ export function setupCompoent(instance) {
         instance.render = render;
     }
 }
+
+export let currentInstance = null;
+export const getCurrentInstance = () => {
+    return currentInstance;
+};
+export const setCurrentInstance = (instance) => {
+    currentInstance = instance;
+};
+export const unsetCurrentInstance = () => {
+    currentInstance = null;
+};
