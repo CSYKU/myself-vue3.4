@@ -1,7 +1,7 @@
 import { hasOwn, ShapeFlags } from "@vue/shared";
 import { Fragment, Text, isSameVnode } from "./createVnode";
 import { getSetQuence } from "./seq";
-import { reactive, ReactiveEffect } from "@vue/reactivity";
+import { isRef, reactive, ReactiveEffect } from "@vue/reactivity";
 import { queueJob } from "./scheduler";
 import { createComponetInstance, setupCompoent } from "./compent";
 import { invokArray } from "./apiLifecycle";
@@ -374,7 +374,7 @@ export function createRenderer(renderOptions) {
             //暴力逻辑，去除n1节点，且n1=null继续走n2初始化挂载逻辑   
             unmount(n1); n1 = null;
         }
-        const { type, shapeFlag } = n2;
+        const { type, shapeFlag, ref } = n2;
         switch (type) {
             case Text:
                 processText(n1, n2, container);
@@ -389,6 +389,17 @@ export function createRenderer(renderOptions) {
                     //对组件处理 Vue3基本废弃函数式组件，因为没有性能节约
                     processComponet(n1, n2, container, anchor)
                 }
+        }
+        if (ref) {
+            setRef(ref, n2)
+        }
+    }
+    function setRef(rawRef, vnode) {  //简单设置下ref ，还存在多个ref的情况没有处理
+        const value = vnode.shapeFlag & ShapeFlags.STATEFUL_COMPONENT ? vnode.compent.espose
+            || vnode.compent.proxy
+            : vnode.el
+        if (isRef(rawRef)) { //这里要判断下ref是否正确，这个isRef()有问题  
+            rawRef.value = value
         }
     }
     const unmount = (vnode) => {
