@@ -27,8 +27,8 @@ export function createRenderer(renderOptions) {
         }
     }
 
-    const mountedElement = (vnode, container, anchor, parentComponent) => {
-        const { type, children, props, shapeFlag } = vnode;
+    const mountElement = (vnode, container, anchor, parentComponent) => {
+        const { type, children, props, shapeFlag, transition } = vnode;
         // let el = hostCreateElement(type)
         // 第一次渲染vnode和dom关联，vnode.el = 真实dom
         // 第二次渲染新的vnode可以和上一次比对，之后更新可以跟新对于el元素，可以后续复用这个dom元素
@@ -47,11 +47,14 @@ export function createRenderer(renderOptions) {
             mountChildren(children, el, parentComponent)
         }
         hostInsert(el, container, anchor);
+        if (transition) {
+            transition.enter(el)
+        }
     }
 
     const processElement = (n1, n2, container, anchor, parentComponent) => {
         if (n1 == null) { //n1即为空没有替换节点，就是只渲染
-            mountedElement(n2, container, anchor, parentComponent)
+            mountElement(n2, container, anchor, parentComponent)
         } else {
             patchElement(n1, n2, container, parentComponent)
         }
@@ -411,7 +414,8 @@ export function createRenderer(renderOptions) {
         }
     }
     const unmount = (vnode) => {
-        const { shapeFlag } = vnode
+        const { shapeFlag, transition, el } = vnode
+        const preformRemove = () => hostRemove(vnode.el)
         if (vnode.type === Fragment) {
             unmountChildren(vnode.children)
         } else if (shapeFlag & ShapeFlags.TELEPORT) {
@@ -419,24 +423,27 @@ export function createRenderer(renderOptions) {
         } else if (shapeFlag & ShapeFlags.COMPONENT) {
             unmount(vnode.compent.subTree)
         } else {
-            hostRemove(vnode.el)
-        }
-    }
-    // 多次调用render会进行虚拟节点的比较，在进行更新
-    const render = (vnode, container) => {
-        if (vnode == null) {
-            if (container._vnode) {
-                unmount(container._vnode)
+            if (transition) {
+                transition.leave(el, preformRemove)
+            } else {
+                preformRemove();
             }
-        } else {
-            patch(container._vnode || null, vnode, container)
         }
-        // 将虚拟节点变成真实节点进行渲染
-        container._vnode = vnode;
-    };
-    return {
-        render,
+        // 多次调用render会进行虚拟节点的比较，在进行更新
+        const render = (vnode, container) => {
+            if (vnode == null) {
+                if (container._vnode) {
+                    unmount(container._vnode)
+                }
+            } else {
+                patch(container._vnode || null, vnode, container)
+            }
+            // 将虚拟节点变成真实节点进行渲染
+            container._vnode = vnode;
+        };
+        return {
+            render,
+        }
     }
-}
 
 // 完全不关心render 层api，所有可以跨平台
