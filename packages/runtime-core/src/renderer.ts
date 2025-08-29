@@ -5,6 +5,7 @@ import { isRef, reactive, ReactiveEffect } from "@vue/reactivity";
 import { queueJob } from "./scheduler";
 import { createComponetInstance, setupCompoent } from "./compent";
 import { invokArray } from "./apiLifecycle";
+import { isKeepAlive } from "./components/KeepAlive";
 
 export function createRenderer(renderOptions) {
     // core中不关心如何渲染
@@ -71,14 +72,14 @@ export function createRenderer(renderOptions) {
         }
 
     }
-    const unmountChildren = (children) => {
+    const unmountChildren = (children, parentComponent) => {
         for (let i = 0; i < children.length; i++) {
             let child = children[i];
-            unmount(child);
+            unmount(child, parentComponent);
         }
     }
 
-    const patchKeyedChildren = (cn1, cn2, el) => {
+    const patchKeyedChildren = (cn1, cn2, el, parentComponent) => {
         //比较两个儿子的差异更新el
         // 用到的api  appendChild rmoveChild insertBefore
         // 首尾缩进去除相同后，减少比对范围，
@@ -125,7 +126,7 @@ export function createRenderer(renderOptions) {
         } else if (i > ic2) {
             if (i <= ic1) {
                 while (i <= ic1) {
-                    unmountChildren(cn1[i]);
+                    unmountChildren(cn1[i], parentComponent);
                     i++;
                 }
             }
@@ -147,7 +148,7 @@ export function createRenderer(renderOptions) {
                 const vnode = cn1[i];
                 const newIndex = keyToNewIndexMap.get(vnode.key)
                 if (newIndex == undefined) {
-                    unmount(vnode);
+                    unmount(vnode, parentComponent);
                 } else {
                     newIndexToOldMapIndex[newIndex - ic2] = i + 1;// 赋值i+1保证0不会歧义
                     patch(vnode, cn2[newIndex], el) //在比较后递归,复用
@@ -193,7 +194,7 @@ export function createRenderer(renderOptions) {
         //
         if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
             if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
-                unmountChildren(c1)
+                unmountChildren(c1, parentComponent)
             }
             if (c1 !== c2) {
                 hostSetElementText(el, c2)
@@ -202,9 +203,9 @@ export function createRenderer(renderOptions) {
         if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
             if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
                 //全量diff数组
-                patchKeyedChildren(c1, c2, el)
+                patchKeyedChildren(c1, c2, el, parentComponent)
             } else {
-                unmountChildren(c1);
+                unmountChildren(c1, parentComponent);
             }
         } else {
             hostSetElementText(el, "");
@@ -352,6 +353,15 @@ export function createRenderer(renderOptions) {
         //组件特点 可以基于自己状态重新渲染 effect 
         // 1.先创建组件实例
         const instance = (vnode.component = createComponetInstance(vnode, parentComponent))
+        if (isKeepAlive(vnode)) {
+            instance.ctx.render = {
+                createElemetn: hostCreateElement,
+                move(vnode, container, anchor) {
+                    hostInsert(vnode.compent.subTree, container, anchor);
+                },
+                unmount,
+            }
+        }
         // 2.给实例的属性赋值
         setupCompoent(instance)
         // 3.创建一个effect  里面有状态更新 组件也是响应式，节点是数据响应式，组件是状态响应式，组件里面包含儿子节点和数据
@@ -360,7 +370,11 @@ export function createRenderer(renderOptions) {
 
     const processComponet = (n1, n2, container, anchor, parentComponent) => {
         if (n1 === null) {
-            mountCompoent(n2, container, anchor, parentComponent);
+            if (n2.shapeFlag & ShapeFlags.COMPONENT_KEPT_ALIVE) {
+                parentComponent.ctx.acitve(n2, container, anchor);
+            } else {
+                mountCompoent(n2, container, anchor, parentComponent);
+            }
         } else {
             //组件更新
             updataComponet(n1, n2)
@@ -375,7 +389,8 @@ export function createRenderer(renderOptions) {
         }
         if (n1 && !isSameVnode(n1, n2)) {
             //暴力逻辑，去除n1节点，且n1=null继续走n2初始化挂载逻辑   
-            unmount(n1); n1 = null;
+            unmount(n1, parentComponent); 
+            n1 = null;
         }
         const { type, shapeFlag, ref } = n2;
         switch (type) {
@@ -413,15 +428,18 @@ export function createRenderer(renderOptions) {
             rawRef.value = value
         }
     }
-    const unmount = (vnode) => {
+    const unmount = (vnode,parentComponent) => {
         const { shapeFlag, transition, el } = vnode
-        const preformRemove = () => hostRemove(vnode.el)
-        if (vnode.type === Fragment) {
-            unmountChildren(vnode.children)
+        const preformRemove = () => hostRemove(vnode.el);
+        if (shapeFlag & ShapeFlags.COMPONENT_SHOULD_KEEP_ALIVE) {
+            // 需要走失活逻辑
+            parentComponent.ctx.deactive(vnode);
+        } else if (vnode.type === Fragment) {
+            unmountChildren(vnode.children, parentComponent)
         } else if (shapeFlag & ShapeFlags.TELEPORT) {
             vnode.type.remove(vnode, unmountChildren)
         } else if (shapeFlag & ShapeFlags.COMPONENT) {
-            unmount(vnode.compent.subTree)
+            unmount(vnode.compent.subTree, parentComponent)
         } else {
             if (transition) {
                 transition.leave(el, preformRemove)
@@ -433,7 +451,7 @@ export function createRenderer(renderOptions) {
         const render = (vnode, container) => {
             if (vnode == null) {
                 if (container._vnode) {
-                    unmount(container._vnode)
+                    unmount(container._vnode, parentComponent)
                 }
             } else {
                 patch(container._vnode || null, vnode, container)
@@ -445,5 +463,5 @@ export function createRenderer(renderOptions) {
             render,
         }
     }
-
+}
 // 完全不关心render 层api，所有可以跨平台
