@@ -61,7 +61,7 @@ export function defindAsyncComponent(options) {
                     return h(errorComponents);
                 } if (loading.value && loadingComponent) {
                     return h(loadingComponent);
-                } else  else {
+                } else {
                     return planceholdr;
                 }
     }
